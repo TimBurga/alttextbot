@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\AltTextBot.Domain\AltTextBot.Domain.csproj" />
+  </ItemGroup>
+</Project>

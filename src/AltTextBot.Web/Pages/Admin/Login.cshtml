@@ -1,0 +1,27 @@
+@page
+@model AltTextBot.Web.Pages.Admin.LoginModel
+@{
+    ViewData["Title"] = "Admin Login";
+}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header"><h1 class="h5 mb-0">Admin Login</h1></div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger">@Model.ErrorMessage</div>
+                    }
+                    <form method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="Password">Password</label>
+                            <input type="password" name="Password" id="Password" class="form-control" autocomplete="current-password" autofocus />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

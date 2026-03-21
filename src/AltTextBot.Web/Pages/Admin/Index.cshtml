@@ -1,0 +1,33 @@
+@page
+@model AltTextBot.Web.Pages.Admin.AdminIndexModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Admin Dashboard</h2>
+        <a href="/admin/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <p class="display-4 mb-1">@Model.TotalSubscribers</p>
+                    <p class="text-muted mb-0">Total Subscribers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <p class="display-4 mb-1">@Model.ActiveSubscribers</p>
+                    <p class="text-muted mb-0">Active</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mt-4">
+        <a href="/admin/subscribers" class="btn btn-primary">View All Subscribers</a>
+        <a href="/admin/audit" class="btn btn-outline-secondary ms-2">Audit Log</a>
+    </div>
+</div>

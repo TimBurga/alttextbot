@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "src\\AltTextBot.AppHost\\AltTextBot.AppHost.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\AltTextBot.Web\\AltTextBot.Web.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

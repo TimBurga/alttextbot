@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- No external package dependencies — pure domain logic -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="AltTextBot.Application.Tests" />
+    <InternalsVisibleTo Include="AltTextBot.Integration.Tests" />
+  </ItemGroup>
+</Project>

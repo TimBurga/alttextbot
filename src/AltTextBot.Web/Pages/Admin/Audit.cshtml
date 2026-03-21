@@ -1,0 +1,57 @@
+@page
+@model AltTextBot.Web.Pages.Admin.AuditModel
+@{
+    ViewData["Title"] = "Audit Log";
+}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Audit Log</h3>
+        <a href="/admin" class="btn btn-outline-secondary btn-sm">&#8592; Dashboard</a>
+    </div>
+    @if (Model.Logs.Count == 0)
+    {
+        <p class="text-muted">No audit events found.</p>
+    }
+    else
+    {
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Subscriber</th>
+                    <th>Event</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model.Logs)
+                {
+                    <tr>
+                        <td><small>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss") UTC</small></td>
+                        <td>
+                            @if (log.SubscriberDid is not null)
+                            {
+                                <a href="/admin/subscribers/@log.SubscriberDid"><small>@log.SubscriberDid[..Math.Min(20, log.SubscriberDid.Length)]&#8230;</small></a>
+                            }
+                        </td>
+                        <td><span class="badge bg-info text-dark">@log.EventType</span></td>
+                        <td style="max-width: 350px;"><small style="overflow-wrap: break-word; word-break: break-word;">@log.Details</small></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    <nav aria-label="Audit log pagination">
+        <ul class="pagination">
+            @if (Model.Page > 1)
+            {
+                <li class="page-item"><a class="page-link" href="?page=@(Model.Page - 1)">Previous</a></li>
+            }
+            <li class="page-item active"><span class="page-link">@Model.Page</span></li>
+            @if (Model.HasMore)
+            {
+                <li class="page-item"><a class="page-link" href="?page=@(Model.Page + 1)">Next</a></li>
+            }
+        </ul>
+    </nav>
+</div>

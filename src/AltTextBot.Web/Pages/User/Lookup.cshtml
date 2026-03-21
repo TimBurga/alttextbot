@@ -1,0 +1,57 @@
+@page
+@model AltTextBot.Web.Pages.User.LookupModel
+@{
+    ViewData["Title"] = "User Lookup";
+}
+<div class="container mt-4">
+    <a href="/" class="btn btn-outline-secondary btn-sm mb-3">&#8592; Back</a>
+    @if (Model.Handle is not null)
+    {
+        <h2 class="h4 mb-3">@Model.Handle</h2>
+        @if (Model.Score is null)
+        {
+            <p class="text-muted">This user is not a subscriber.</p>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card text-center mb-3">
+                        <div class="card-body">
+                            <p class="text-muted small mb-1">Current Tier</p>
+                            <p class="display-6 mb-0">@Model.CurrentTier</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center mb-3">
+                        <div class="card-body">
+                            <p class="text-muted small mb-1">Score (30 days)</p>
+                            <p class="display-6 mb-0">@Model.Score.ScorePercent.ToString("F1")%</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center mb-3">
+                        <div class="card-body">
+                            <p class="text-muted small mb-1">Image Posts</p>
+                            @if (Model.Score.TotalImagePosts == 0)
+                            {
+                                <p class="text-muted mb-0">No image posts yet</p>
+                            }
+                            else
+                            {
+                                <p class="display-6 mb-0">@Model.Score.PostsWithAllAlt / @Model.Score.TotalImagePosts</p>
+                                <small class="text-muted">with full alt text</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @if (Model.LastScoredAt.HasValue)
+            {
+                <p class="text-muted small">Last scored: @Model.LastScoredAt.Value.ToString("yyyy-MM-dd HH:mm UTC")</p>
+            }
+        }
+    }
+</div>

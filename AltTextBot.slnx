@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AltTextBot.AppHost/AltTextBot.AppHost.csproj" />
+    <Project Path="src/AltTextBot.ServiceDefaults/AltTextBot.ServiceDefaults.csproj" />
+    <Project Path="src/AltTextBot.Domain/AltTextBot.Domain.csproj" />
+    <Project Path="src/AltTextBot.Application/AltTextBot.Application.csproj" />
+    <Project Path="src/AltTextBot.Infrastructure/AltTextBot.Infrastructure.csproj" />
+    <Project Path="src/AltTextBot.Worker/AltTextBot.Worker.csproj" />
+    <Project Path="src/AltTextBot.Web/AltTextBot.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AltTextBot.Domain.Tests/AltTextBot.Domain.Tests.csproj" />
+    <Project Path="tests/AltTextBot.Application.Tests/AltTextBot.Application.Tests.csproj" />
+    <Project Path="tests/AltTextBot.Integration.Tests/AltTextBot.Integration.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AltTextBot.Domain\AltTextBot.Domain.csproj" />
+    <ProjectReference Include="..\..\src\AltTextBot.Application\AltTextBot.Application.csproj" />
+    <ProjectReference Include="..\..\src\AltTextBot.Infrastructure\AltTextBot.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\AltTextBot.Web\AltTextBot.Web.csproj" />
+  </ItemGroup>
+</Project>

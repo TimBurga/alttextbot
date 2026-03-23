@@ -98,6 +98,50 @@ public class ScoringServiceTests
     }
 
     [Fact]
+    public async Task ComputeScore_WithOnlyNonImagePosts_ReturnsNone()
+    {
+        using var db = CreateDb();
+        var did = "did:plc:non-image-only";
+
+        // Non-image posts (hasImages: false) are excluded from scoring entirely
+        for (var i = 0; i < 10; i++)
+        {
+            db.TrackedPosts.Add(Domain.Entities.TrackedPost.Create(
+                $"at://test/post/{i}", did, null, hasImages: false, imageCount: 0, altTextCount: 0));
+        }
+        await db.SaveChangesAsync();
+
+        var score = await CreateService(db).ComputeScoreAsync(did);
+
+        score.TotalImagePosts.Should().Be(0);
+        score.Tier.Should().Be(LabelTier.None, "subscribers with no image posts should not receive a label");
+    }
+
+    [Fact]
+    public async Task ComputeScore_PostJustInsideRollingWindow_IsIncluded()
+    {
+        using var db = CreateDb();
+        var did = "did:plc:boundary-test";
+
+        // One post at 29 days old (inside the 30-day window) and one at 31 days old (outside).
+        // Verifies the window is an inclusive lower bound: >= cutoff.
+        var insidePost = Domain.Entities.TrackedPost.Create("at://test/post/inside", did, null, true, 1, 1);
+        insidePost.CreatedAt = DateTimeOffset.UtcNow.AddDays(-29);
+
+        var outsidePost = Domain.Entities.TrackedPost.Create("at://test/post/outside", did, null, true, 1, 0);
+        outsidePost.CreatedAt = DateTimeOffset.UtcNow.AddDays(-31);
+
+        db.TrackedPosts.AddRange(insidePost, outsidePost);
+        await db.SaveChangesAsync();
+
+        var score = await CreateService(db).ComputeScoreAsync(did);
+
+        score.TotalImagePosts.Should().Be(1, "only the post inside the 30-day window should be counted");
+        score.PostsWithAllAlt.Should().Be(1);
+        score.Tier.Should().Be(LabelTier.Hero);
+    }
+
+    [Fact]
     public async Task ComputeScore_ExcludesPostsOutsideRollingWindow()
     {
         using var db = CreateDb();

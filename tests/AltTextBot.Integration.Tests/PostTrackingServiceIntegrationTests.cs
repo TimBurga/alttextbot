@@ -49,4 +49,29 @@ public class PostTrackingServiceIntegrationTests(DatabaseFixture db) : IClassFix
         context.TrackedPosts.Any(p => p.AtUri == oldUri).Should().BeFalse("old post should have been deleted");
         context.TrackedPosts.Any(p => p.AtUri == newUri).Should().BeTrue("recent post should remain");
     }
+
+    [Fact]
+    public async Task DeleteOldPostsAsync_CascadesDeleteToImages()
+    {
+        var did = "did:plc:cascade-delete-test";
+        var postUri = "at://did:plc:cascade-delete-test/app.bsky.feed.post/img001";
+
+        await using var context = db.CreateDbContext();
+        context.Subscribers.Add(AltTextBot.Domain.Entities.Subscriber.Create(did, "cascade.test"));
+
+        var post = AltTextBot.Domain.Entities.TrackedPost.Create(postUri, did, null, true, 2, 1);
+        post.CreatedAt = DateTimeOffset.UtcNow.AddDays(-40);
+        context.TrackedPosts.Add(post);
+
+        context.TrackedImages.Add(AltTextBot.Domain.Entities.TrackedImage.Create(postUri, 0, "bafybeiabc000", true));
+        context.TrackedImages.Add(AltTextBot.Domain.Entities.TrackedImage.Create(postUri, 1, "bafybeiabc001", false));
+        await context.SaveChangesAsync();
+
+        var service = new PostTrackingService(context);
+        await service.DeleteOldPostsAsync(DateTimeOffset.UtcNow.AddDays(-30));
+
+        await using var verify = db.CreateDbContext();
+        verify.TrackedPosts.Any(p => p.AtUri == postUri).Should().BeFalse();
+        verify.TrackedImages.Any(i => i.PostAtUri == postUri).Should().BeFalse("images should be cascade-deleted with their post");
+    }
 }

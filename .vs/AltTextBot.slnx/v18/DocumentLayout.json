@@ -1,53 +1,77 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\src\\ClaudeBot\\",
+  "WorkspaceRootPath": "C:\\src\\alttextbot\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{FC5C28E3-1239-61BA-1D58-628C37199BDB}|src\\AltTextBot.Web\\AltTextBot.Web.csproj|c:\\src\\claudebot\\src\\alttextbot.web\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{FC5C28E3-1239-61BA-1D58-628C37199BDB}|src\\AltTextBot.Web\\AltTextBot.Web.csproj|solutionrelative:src\\alttextbot.web\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{3D664F87-338C-8BF7-FD99-97D8ECFFB116}|tests\\AltTextBot.Integration.Tests\\AltTextBot.Integration.Tests.csproj|c:\\src\\alttextbot\\tests\\alttextbot.integration.tests\\web\\adminapitests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3D664F87-338C-8BF7-FD99-97D8ECFFB116}|tests\\AltTextBot.Integration.Tests\\AltTextBot.Integration.Tests.csproj|solutionrelative:tests\\alttextbot.integration.tests\\web\\adminapitests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\claudebot\\src\\alttextbot.worker\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|solutionrelative:src\\alttextbot.worker\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|c:\\src\\alttextbot\\src\\alttextbot.infrastructure\\services\\blueskybotclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|solutionrelative:src\\alttextbot.infrastructure\\services\\blueskybotclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\claudebot\\src\\alttextbot.worker\\services\\tapworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|solutionrelative:src\\alttextbot.worker\\services\\tapworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9307A5CA-07A6-2FC3-FB86-C354B41333A4}|src\\AltTextBot.AppHost\\AltTextBot.AppHost.csproj|c:\\src\\claudebot\\src\\alttextbot.apphost\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9307A5CA-07A6-2FC3-FB86-C354B41333A4}|src\\AltTextBot.AppHost\\AltTextBot.AppHost.csproj|solutionrelative:src\\alttextbot.apphost\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\claudebot\\src\\alttextbot.worker\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|solutionrelative:src\\alttextbot.worker\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|c:\\src\\claudebot\\src\\alttextbot.infrastructure\\infrastructureextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|solutionrelative:src\\alttextbot.infrastructure\\infrastructureextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\claudebot\\src\\alttextbot.worker\\services\\startupsyncservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|solutionrelative:src\\alttextbot.worker\\services\\startupsyncservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\claudebot\\src\\alttextbot.worker\\services\\jetstreamworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|solutionrelative:src\\alttextbot.worker\\services\\jetstreamworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\claudebot\\src\\alttextbot.worker\\services\\rescoringworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\alttextbot\\src\\alttextbot.worker\\services\\rescoringworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|solutionrelative:src\\alttextbot.worker\\services\\rescoringworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{3D664F87-338C-8BF7-FD99-97D8ECFFB116}|tests\\AltTextBot.Integration.Tests\\AltTextBot.Integration.Tests.csproj|c:\\src\\claudebot\\tests\\alttextbot.integration.tests\\labelstatereadertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\alttextbot\\src\\alttextbot.worker\\services\\jetstreamworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|solutionrelative:src\\alttextbot.worker\\services\\jetstreamworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\alttextbot\\src\\alttextbot.worker\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|solutionrelative:src\\alttextbot.worker\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\alttextbot\\src\\alttextbot.worker\\services\\tapworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|solutionrelative:src\\alttextbot.worker\\services\\tapworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\alttextbot\\src\\alttextbot.worker\\services\\startupsyncservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|solutionrelative:src\\alttextbot.worker\\services\\startupsyncservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|c:\\src\\alttextbot\\src\\alttextbot.infrastructure\\services\\subscriberservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|solutionrelative:src\\alttextbot.infrastructure\\services\\subscriberservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{152DF802-EECD-16CA-6967-A32248DAD5B8}|src\\AltTextBot.Application\\AltTextBot.Application.csproj|c:\\src\\alttextbot\\src\\alttextbot.application\\interfaces\\isubscriberset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{152DF802-EECD-16CA-6967-A32248DAD5B8}|src\\AltTextBot.Application\\AltTextBot.Application.csproj|solutionrelative:src\\alttextbot.application\\interfaces\\isubscriberset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|c:\\src\\alttextbot\\src\\alttextbot.infrastructure\\services\\subscriberset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|solutionrelative:src\\alttextbot.infrastructure\\services\\subscriberset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{152DF802-EECD-16CA-6967-A32248DAD5B8}|src\\AltTextBot.Application\\AltTextBot.Application.csproj|c:\\src\\alttextbot\\src\\alttextbot.application\\interfaces\\isubscriberservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{152DF802-EECD-16CA-6967-A32248DAD5B8}|src\\AltTextBot.Application\\AltTextBot.Application.csproj|solutionrelative:src\\alttextbot.application\\interfaces\\isubscriberservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC5C28E3-1239-61BA-1D58-628C37199BDB}|src\\AltTextBot.Web\\AltTextBot.Web.csproj|c:\\src\\alttextbot\\src\\alttextbot.web\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{FC5C28E3-1239-61BA-1D58-628C37199BDB}|src\\AltTextBot.Web\\AltTextBot.Web.csproj|solutionrelative:src\\alttextbot.web\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|c:\\src\\alttextbot\\src\\alttextbot.worker\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{3DCDC09C-6A4F-6CC4-8D21-1C019C7BB015}|src\\AltTextBot.Worker\\AltTextBot.Worker.csproj|solutionrelative:src\\alttextbot.worker\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9307A5CA-07A6-2FC3-FB86-C354B41333A4}|src\\AltTextBot.AppHost\\AltTextBot.AppHost.csproj|c:\\src\\alttextbot\\src\\alttextbot.apphost\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9307A5CA-07A6-2FC3-FB86-C354B41333A4}|src\\AltTextBot.AppHost\\AltTextBot.AppHost.csproj|solutionrelative:src\\alttextbot.apphost\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|c:\\src\\alttextbot\\src\\alttextbot.infrastructure\\infrastructureextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|solutionrelative:src\\alttextbot.infrastructure\\infrastructureextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3D664F87-338C-8BF7-FD99-97D8ECFFB116}|tests\\AltTextBot.Integration.Tests\\AltTextBot.Integration.Tests.csproj|c:\\src\\alttextbot\\tests\\alttextbot.integration.tests\\labelstatereadertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{3D664F87-338C-8BF7-FD99-97D8ECFFB116}|tests\\AltTextBot.Integration.Tests\\AltTextBot.Integration.Tests.csproj|solutionrelative:tests\\alttextbot.integration.tests\\labelstatereadertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|c:\\src\\claudebot\\src\\alttextbot.infrastructure\\services\\labelerhttpclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|c:\\src\\alttextbot\\src\\alttextbot.infrastructure\\services\\labelerhttpclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|solutionrelative:src\\alttextbot.infrastructure\\services\\labelerhttpclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|c:\\src\\claudebot\\src\\alttextbot.infrastructure\\services\\labelstatereader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|c:\\src\\alttextbot\\src\\alttextbot.infrastructure\\services\\labelstatereader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0533FF0B-D86D-72E2-3A4E-07BCB1821C7B}|src\\AltTextBot.Infrastructure\\AltTextBot.Infrastructure.csproj|solutionrelative:src\\alttextbot.infrastructure\\services\\labelstatereader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
@@ -58,34 +82,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 4,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\src\\AltTextBot.Web\\appsettings.json",
-              "RelativeDocumentMoniker": "src\\AltTextBot.Web\\appsettings.json",
-              "ToolTip": "C:\\src\\ClaudeBot\\src\\AltTextBot.Web\\appsettings.json",
-              "RelativeToolTip": "src\\AltTextBot.Web\\appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAADAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-03-17T00:41:38.64Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "InfrastructureExtensions.cs",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\src\\AltTextBot.Infrastructure\\InfrastructureExtensions.cs",
-              "RelativeDocumentMoniker": "src\\AltTextBot.Infrastructure\\InfrastructureExtensions.cs",
-              "ToolTip": "C:\\src\\ClaudeBot\\src\\AltTextBot.Infrastructure\\InfrastructureExtensions.cs",
-              "RelativeToolTip": "src\\AltTextBot.Infrastructure\\InfrastructureExtensions.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-17T00:35:46.154Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Bookmark",
               "Name": "ST:1:0:{fabf9319-47eb-497e-b8f6-d9f73fba5f55}"
@@ -104,63 +102,153 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AdminApiTests.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\tests\\AltTextBot.Integration.Tests\\Web\\AdminApiTests.cs",
+              "RelativeDocumentMoniker": "tests\\AltTextBot.Integration.Tests\\Web\\AdminApiTests.cs",
+              "ToolTip": "C:\\src\\alttextbot\\tests\\AltTextBot.Integration.Tests\\Web\\AdminApiTests.cs",
+              "RelativeToolTip": "tests\\AltTextBot.Integration.Tests\\Web\\AdminApiTests.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAABFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-22T19:26:41.971Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "BlueskyBotClient.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\Services\\BlueskyBotClient.cs",
+              "RelativeDocumentMoniker": "src\\AltTextBot.Infrastructure\\Services\\BlueskyBotClient.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\Services\\BlueskyBotClient.cs",
+              "RelativeToolTip": "src\\AltTextBot.Infrastructure\\Services\\BlueskyBotClient.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAAwFEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-22T19:23:50.538Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "SubscriberSet.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\Services\\SubscriberSet.cs",
+              "RelativeDocumentMoniker": "src\\AltTextBot.Infrastructure\\Services\\SubscriberSet.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\Services\\SubscriberSet.cs",
+              "RelativeToolTip": "src\\AltTextBot.Infrastructure\\Services\\SubscriberSet.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-22T19:21:32.586Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ISubscriberSet.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Application\\Interfaces\\ISubscriberSet.cs",
+              "RelativeDocumentMoniker": "src\\AltTextBot.Application\\Interfaces\\ISubscriberSet.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Application\\Interfaces\\ISubscriberSet.cs",
+              "RelativeToolTip": "src\\AltTextBot.Application\\Interfaces\\ISubscriberSet.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-22T19:21:31.237Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "SubscriberService.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\Services\\SubscriberService.cs",
+              "RelativeDocumentMoniker": "src\\AltTextBot.Infrastructure\\Services\\SubscriberService.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\Services\\SubscriberService.cs",
+              "RelativeToolTip": "src\\AltTextBot.Infrastructure\\Services\\SubscriberService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACkAAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-22T19:20:52.389Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "ISubscriberService.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Application\\Interfaces\\ISubscriberService.cs",
+              "RelativeDocumentMoniker": "src\\AltTextBot.Application\\Interfaces\\ISubscriberService.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Application\\Interfaces\\ISubscriberService.cs",
+              "RelativeToolTip": "src\\AltTextBot.Application\\Interfaces\\ISubscriberService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-22T19:20:49.511Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
               "Title": "appsettings.json",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\appsettings.json",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Web\\appsettings.json",
+              "RelativeDocumentMoniker": "src\\AltTextBot.Web\\appsettings.json",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Web\\appsettings.json",
+              "RelativeToolTip": "src\\AltTextBot.Web\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-03-17T00:41:38.64Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\appsettings.json",
               "RelativeDocumentMoniker": "src\\AltTextBot.Worker\\appsettings.json",
-              "ToolTip": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\appsettings.json",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\appsettings.json",
               "RelativeToolTip": "src\\AltTextBot.Worker\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-03-17T00:32:23.761Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-17T00:32:23.761Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 6,
               "Title": "StartupSyncService.cs",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\Services\\StartupSyncService.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\Services\\StartupSyncService.cs",
               "RelativeDocumentMoniker": "src\\AltTextBot.Worker\\Services\\StartupSyncService.cs",
-              "ToolTip": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\Services\\StartupSyncService.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\Services\\StartupSyncService.cs",
               "RelativeToolTip": "src\\AltTextBot.Worker\\Services\\StartupSyncService.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAABEAAAAhAAAAAAAAAA==",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAwwDYAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-17T00:13:37.177Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "TapWorker.cs",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\Services\\TapWorker.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\Services\\TapWorker.cs",
               "RelativeDocumentMoniker": "src\\AltTextBot.Worker\\Services\\TapWorker.cs",
-              "ToolTip": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\Services\\TapWorker.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\Services\\TapWorker.cs",
               "RelativeToolTip": "src\\AltTextBot.Worker\\Services\\TapWorker.cs",
-              "ViewState": "AgIAAEoAAAAAAAAAAAAgwJsAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAJsAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-17T00:11:19.793Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 3,
               "Title": "JetstreamWorker.cs",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\Services\\JetstreamWorker.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\Services\\JetstreamWorker.cs",
               "RelativeDocumentMoniker": "src\\AltTextBot.Worker\\Services\\JetstreamWorker.cs",
-              "ToolTip": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\Services\\JetstreamWorker.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\Services\\JetstreamWorker.cs",
               "RelativeToolTip": "src\\AltTextBot.Worker\\Services\\JetstreamWorker.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACgAAAA8AAAAAAAAAA==",
+              "ViewState": "AgIAACIAAAAAAAAAAAAQwCMAAAA2AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-17T00:11:05.895Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 15,
               "Title": "LabelStateReaderTests.cs",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\tests\\AltTextBot.Integration.Tests\\LabelStateReaderTests.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\tests\\AltTextBot.Integration.Tests\\LabelStateReaderTests.cs",
               "RelativeDocumentMoniker": "tests\\AltTextBot.Integration.Tests\\LabelStateReaderTests.cs",
-              "ToolTip": "C:\\src\\ClaudeBot\\tests\\AltTextBot.Integration.Tests\\LabelStateReaderTests.cs",
+              "ToolTip": "C:\\src\\alttextbot\\tests\\AltTextBot.Integration.Tests\\LabelStateReaderTests.cs",
               "RelativeToolTip": "tests\\AltTextBot.Integration.Tests\\LabelStateReaderTests.cs",
               "ViewState": "AgIAABsAAAAAAAAAAAAYwEYAAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -168,11 +256,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 17,
               "Title": "LabelStateReader.cs",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\src\\AltTextBot.Infrastructure\\Services\\LabelStateReader.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\Services\\LabelStateReader.cs",
               "RelativeDocumentMoniker": "src\\AltTextBot.Infrastructure\\Services\\LabelStateReader.cs",
-              "ToolTip": "C:\\src\\ClaudeBot\\src\\AltTextBot.Infrastructure\\Services\\LabelStateReader.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\Services\\LabelStateReader.cs",
               "RelativeToolTip": "src\\AltTextBot.Infrastructure\\Services\\LabelStateReader.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -180,11 +268,49 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 4,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\Program.cs",
+              "RelativeDocumentMoniker": "src\\AltTextBot.Worker\\Program.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\Program.cs",
+              "RelativeToolTip": "src\\AltTextBot.Worker\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-16T23:51:36.613Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "RescoringWorker.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\Services\\RescoringWorker.cs",
+              "RelativeDocumentMoniker": "src\\AltTextBot.Worker\\Services\\RescoringWorker.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Worker\\Services\\RescoringWorker.cs",
+              "RelativeToolTip": "src\\AltTextBot.Worker\\Services\\RescoringWorker.cs",
+              "ViewState": "AgIAAFQAAAAAAAAAAAAYwHgAAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-16T23:54:50.244Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "InfrastructureExtensions.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\InfrastructureExtensions.cs",
+              "RelativeDocumentMoniker": "src\\AltTextBot.Infrastructure\\InfrastructureExtensions.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\InfrastructureExtensions.cs",
+              "RelativeToolTip": "src\\AltTextBot.Infrastructure\\InfrastructureExtensions.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-17T00:35:46.154Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
               "Title": "LabelerHttpClient.cs",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\src\\AltTextBot.Infrastructure\\Services\\LabelerHttpClient.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\Services\\LabelerHttpClient.cs",
               "RelativeDocumentMoniker": "src\\AltTextBot.Infrastructure\\Services\\LabelerHttpClient.cs",
-              "ToolTip": "C:\\src\\ClaudeBot\\src\\AltTextBot.Infrastructure\\Services\\LabelerHttpClient.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.Infrastructure\\Services\\LabelerHttpClient.cs",
               "RelativeToolTip": "src\\AltTextBot.Infrastructure\\Services\\LabelerHttpClient.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAuwCYAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -192,42 +318,15 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "RescoringWorker.cs",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\Services\\RescoringWorker.cs",
-              "RelativeDocumentMoniker": "src\\AltTextBot.Worker\\Services\\RescoringWorker.cs",
-              "ToolTip": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\Services\\RescoringWorker.cs",
-              "RelativeToolTip": "src\\AltTextBot.Worker\\Services\\RescoringWorker.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAADMAAABRAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-16T23:54:50.244Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 13,
               "Title": "Program.cs",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\Program.cs",
-              "RelativeDocumentMoniker": "src\\AltTextBot.Worker\\Program.cs",
-              "ToolTip": "C:\\src\\ClaudeBot\\src\\AltTextBot.Worker\\Program.cs",
-              "RelativeToolTip": "src\\AltTextBot.Worker\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAA1AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-16T23:51:36.613Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\src\\ClaudeBot\\src\\AltTextBot.AppHost\\Program.cs",
+              "DocumentMoniker": "C:\\src\\alttextbot\\src\\AltTextBot.AppHost\\Program.cs",
               "RelativeDocumentMoniker": "src\\AltTextBot.AppHost\\Program.cs",
-              "ToolTip": "C:\\src\\ClaudeBot\\src\\AltTextBot.AppHost\\Program.cs",
+              "ToolTip": "C:\\src\\alttextbot\\src\\AltTextBot.AppHost\\Program.cs",
               "RelativeToolTip": "src\\AltTextBot.AppHost\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAB4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-09T21:10:05.598Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-09T21:10:05.598Z"
             }
           ]
         }

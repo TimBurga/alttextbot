@@ -30,16 +30,8 @@ public sealed class BlueskyBotClient(
 
             var mention = handle is not null ? $"@{handle}" : "you";
 
-            var text = newTier switch
-            {
-                LabelTier.Bronze => $"Congrats {mention} — you've earned the Bronze label on Alt Heroes! You're on your way to making Bluesky more accessible. Keep adding alt text! ♿",
-                LabelTier.Silver => $"Congrats {mention} — you've leveled up to Silver on Alt Heroes! Your commitment to alt text is making a real difference. ♿",
-                LabelTier.Gold => $"Congrats {mention} — Gold label on Alt Heroes! You're a true alt text champion. 🏅♿",
-                LabelTier.Hero => $"Congrats {mention} — you've reached Hero status on Alt Heroes! An outstanding example of accessible posting on Bluesky. 🦸♿",
-                _ => null
-            };
-
-            if (text is null) return;
+            var text =
+                $"@{handle} just leveled up to {newTier}! Congratulations and thank you for helping to make Bluesky better!\r\n\r\n~ Like and subscribe to get your own Alt Heroes medal! ~";
 
             var result = await agent.Post(text, cancellationToken: ct);
             if (result.Succeeded)

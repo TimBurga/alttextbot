@@ -3,6 +3,7 @@ using AltTextBot.Domain.Enums;
 using AltTextBot.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute.ExceptionExtensions;
 
 namespace AltTextBot.Integration.Tests;
 
@@ -100,6 +101,27 @@ public class SubscriberServiceTests(DatabaseFixture fixture) : IClassFixture<Dat
         var act = async () => await service.UnsubscribeAsync("did:plc:ghost-1");
 
         await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task SubscribeAsync_WhenTapThrows_SubscriberIsStillCreated()
+    {
+        await using var db = fixture.CreateDbContext();
+        var subscriberSet = new SubscriberSet();
+        var auditLogger = new AuditLogger(db);
+        var tapClient = Substitute.For<ITapApiClient>();
+        tapClient.AddReposAsync(Arg.Any<IEnumerable<string>>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("Tap service unavailable"));
+
+        var service = new SubscriberService(db, subscriberSet, auditLogger, tapClient, NullLogger<SubscriberService>.Instance);
+        var did = "did:plc:tap-fail-test-1";
+
+        await service.SubscribeAsync(did, "tapfail.bsky.social");
+
+        await using var verify = fixture.CreateDbContext();
+        var subscriber = await verify.Subscribers.FindAsync([did]);
+        subscriber.Should().NotBeNull("subscriber should be persisted even when Tap registration fails");
+        subscriber!.Status.Should().Be(SubscriberStatus.Active);
     }
 
     [Fact]

@@ -56,7 +56,15 @@
       "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Domain.Tests/)",
       "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Application.Tests/)",
       "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" build AltTextBot.slnx --no-incremental -warnaserror)",
-      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test AltTextBot.slnx --no-build)"
+      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test AltTextBot.slnx --no-build)",
+      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" build --no-restore -v q)",
+      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Domain.Tests tests/AltTextBot.Application.Tests --no-build -v n)",
+      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Domain.Tests/ --no-build -v n)",
+      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Application.Tests/ --no-build -v n)",
+      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Domain.Tests/ tests/AltTextBot.Application.Tests/ --no-build -v q)",
+      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Application.Tests/ --no-build -v q)",
+      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" build tests/AltTextBot.Application.Tests/ -v q)",
+      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Integration.Tests/ -v q)"
     ]
   }
 }

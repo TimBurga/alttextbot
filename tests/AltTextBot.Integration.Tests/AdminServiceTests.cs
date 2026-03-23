@@ -12,7 +12,8 @@ public class AdminServiceTests(DatabaseFixture fixture) : IClassFixture<Database
     private AdminService CreateService(
         AltTextBot.Infrastructure.Data.AltTextBotDbContext db,
         ILabelerClient? labelerClient = null,
-        ILabelStateReader? labelStateReader = null)
+        ILabelStateReader? labelStateReader = null,
+        IBlueskyPostClient? postClient = null)
     {
         var scoring = new ScoringService(db, Options.Create(new ScoringOptions()));
         var auditLogger = new AuditLogger(db);
@@ -22,7 +23,7 @@ public class AdminServiceTests(DatabaseFixture fixture) : IClassFixture<Database
             labelerClient ?? Substitute.For<ILabelerClient>(),
             labelStateReader ?? Substitute.For<ILabelStateReader>(),
             auditLogger,
-            Substitute.For<IBlueskyPostClient>(),
+            postClient ?? Substitute.For<IBlueskyPostClient>(),
             NullLogger<AdminService>.Instance);
     }
 
@@ -33,6 +34,21 @@ public class AdminServiceTests(DatabaseFixture fixture) : IClassFixture<Database
         db.Subscribers.Add(subscriber);
         await db.SaveChangesAsync();
         return did;
+    }
+
+    // Seeds `withAlt` posts that have all alt text and `(total - withAlt)` that are missing alt.
+    private async Task SeedImagePosts(string did, int withAlt, int total)
+    {
+        await using var db = fixture.CreateDbContext();
+        for (var i = 0; i < total; i++)
+        {
+            var hasAllAlt = i < withAlt;
+            db.TrackedPosts.Add(AltTextBot.Domain.Entities.TrackedPost.Create(
+                $"at://{did}/app.bsky.feed.post/{i:000}",
+                did, postedAt: null, hasImages: true,
+                imageCount: 1, altTextCount: hasAllAlt ? 1 : 0));
+        }
+        await db.SaveChangesAsync();
     }
 
     [Fact]
@@ -139,5 +155,160 @@ public class AdminServiceTests(DatabaseFixture fixture) : IClassFixture<Database
             verify.AuditLogs.Where(l => l.SubscriberDid == did));
         logs.Should().Contain(l => l.EventType == AuditEventType.LabelChanged);
         logs.Should().Contain(l => l.EventType == AuditEventType.ManualRescore);
+    }
+
+    // --- Tier transition matrix ---
+
+    [Fact]
+    public async Task ManualRescoreAsync_NoneToHero_AppliesHeroWithoutNegating()
+    {
+        var did = "did:plc:transition-none-hero";
+        await SeedActiveSubscriber(did);
+        await SeedImagePosts(did, withAlt: 5, total: 5); // 100% → Hero
+
+        var labelerClient = Substitute.For<ILabelerClient>();
+        var labelStateReader = Substitute.For<ILabelStateReader>();
+        labelStateReader.GetCurrentLabelAsync(did, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<LabelTier?>(null));
+
+        await using var db = fixture.CreateDbContext();
+        await CreateService(db, labelerClient, labelStateReader).ManualRescoreAsync(did);
+
+        await labelerClient.Received(1).ApplyLabelAsync(did, LabelTier.Hero, Arg.Any<CancellationToken>());
+        await labelerClient.DidNotReceive().NegateLabelAsync(Arg.Any<string>(), Arg.Any<LabelTier>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ManualRescoreAsync_BronzeToGold_AppliesGoldAndNegatesBronze()
+    {
+        var did = "did:plc:transition-bronze-gold";
+        await SeedActiveSubscriber(did);
+        await SeedImagePosts(did, withAlt: 4, total: 5); // 80% → Gold
+
+        var labelerClient = Substitute.For<ILabelerClient>();
+        var labelStateReader = Substitute.For<ILabelStateReader>();
+        labelStateReader.GetCurrentLabelAsync(did, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<LabelTier?>(LabelTier.Bronze));
+
+        await using var db = fixture.CreateDbContext();
+        await CreateService(db, labelerClient, labelStateReader).ManualRescoreAsync(did);
+
+        await labelerClient.Received(1).ApplyLabelAsync(did, LabelTier.Gold, Arg.Any<CancellationToken>());
+        await labelerClient.Received(1).NegateLabelAsync(did, LabelTier.Bronze, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ManualRescoreAsync_HeroToSilver_AppliesSilverAndNegatesHero()
+    {
+        var did = "did:plc:transition-hero-silver";
+        await SeedActiveSubscriber(did);
+        await SeedImagePosts(did, withAlt: 3, total: 5); // 60% → Silver
+
+        var labelerClient = Substitute.For<ILabelerClient>();
+        var labelStateReader = Substitute.For<ILabelStateReader>();
+        labelStateReader.GetCurrentLabelAsync(did, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<LabelTier?>(LabelTier.Hero));
+
+        await using var db = fixture.CreateDbContext();
+        await CreateService(db, labelerClient, labelStateReader).ManualRescoreAsync(did);
+
+        // Apply new tier before negating old — prevents label regression on partial failure
+        await labelerClient.Received(1).ApplyLabelAsync(did, LabelTier.Silver, Arg.Any<CancellationToken>());
+        await labelerClient.Received(1).NegateLabelAsync(did, LabelTier.Hero, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ManualRescoreAsync_GoldToNone_NegatesGoldWithoutApplying()
+    {
+        var did = "did:plc:transition-gold-none";
+        await SeedActiveSubscriber(did);
+        await SeedImagePosts(did, withAlt: 1, total: 5); // 20% → None
+
+        var labelerClient = Substitute.For<ILabelerClient>();
+        var labelStateReader = Substitute.For<ILabelStateReader>();
+        labelStateReader.GetCurrentLabelAsync(did, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<LabelTier?>(LabelTier.Gold));
+
+        await using var db = fixture.CreateDbContext();
+        await CreateService(db, labelerClient, labelStateReader).ManualRescoreAsync(did);
+
+        await labelerClient.DidNotReceive().ApplyLabelAsync(Arg.Any<string>(), Arg.Any<LabelTier>(), Arg.Any<CancellationToken>());
+        await labelerClient.Received(1).NegateLabelAsync(did, LabelTier.Gold, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ManualRescoreAsync_WithNoImagePosts_DoesNotApplyAnyLabel()
+    {
+        var did = "did:plc:transition-no-images";
+        await SeedActiveSubscriber(did);
+        // No image posts seeded — subscriber has no scoring history
+
+        var labelerClient = Substitute.For<ILabelerClient>();
+        var labelStateReader = Substitute.For<ILabelStateReader>();
+        labelStateReader.GetCurrentLabelAsync(did, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<LabelTier?>(null));
+
+        await using var db = fixture.CreateDbContext();
+        await CreateService(db, labelerClient, labelStateReader).ManualRescoreAsync(did);
+
+        await labelerClient.DidNotReceive().ApplyLabelAsync(Arg.Any<string>(), Arg.Any<LabelTier>(), Arg.Any<CancellationToken>());
+        await labelerClient.DidNotReceive().NegateLabelAsync(Arg.Any<string>(), Arg.Any<LabelTier>(), Arg.Any<CancellationToken>());
+    }
+
+    // --- Audit log queries ---
+
+    [Fact]
+    public async Task GetRecentAuditLogsAsync_ReturnsNewestFirstAndRespectsLimit()
+    {
+        var did = "did:plc:audit-recent-test";
+        await SeedActiveSubscriber(did);
+
+        await using var setup = fixture.CreateDbContext();
+        var auditLogger = new AuditLogger(setup);
+        for (var i = 0; i < 5; i++)
+        {
+            await auditLogger.LogAsync(AuditEventType.ManualRescore, did, $"rescore {i}");
+            await Task.Delay(5); // ensure distinct Timestamp ordering
+        }
+
+        await using var db = fixture.CreateDbContext();
+        var service = CreateService(db);
+
+        var logs = await service.GetRecentAuditLogsAsync(did, count: 3);
+
+        logs.Should().HaveCount(3);
+        logs[0].Timestamp.Should().BeOnOrAfter(logs[1].Timestamp, "results should be newest first");
+        logs[1].Timestamp.Should().BeOnOrAfter(logs[2].Timestamp);
+    }
+
+    [Fact]
+    public async Task GetAuditLogsPageAsync_HasMoreTrue_WhenMorePagesExist()
+    {
+        // Seed enough logs to guarantee at least 6 total across the shared DB
+        await using var setup = fixture.CreateDbContext();
+        var auditLogger = new AuditLogger(setup);
+        for (var i = 0; i < 6; i++)
+            await auditLogger.LogAsync(AuditEventType.RescoringRun, null, $"paginate-test-{i}");
+
+        await using var db = fixture.CreateDbContext();
+        var service = CreateService(db);
+
+        var (logs, hasMore) = await service.GetAuditLogsPageAsync(page: 1, pageSize: 5);
+
+        logs.Count.Should().Be(5, "page size should be respected");
+        hasMore.Should().BeTrue("seeding 6 logs guarantees at least one more page");
+    }
+
+    [Fact]
+    public async Task GetAuditLogsPageAsync_HasMoreFalse_OnLastPage()
+    {
+        // Request a page far enough out that the result is empty (or near-empty)
+        await using var db = fixture.CreateDbContext();
+        var service = CreateService(db);
+
+        var (logs, hasMore) = await service.GetAuditLogsPageAsync(page: 9999, pageSize: 100);
+
+        logs.Should().BeEmpty();
+        hasMore.Should().BeFalse();
     }
 }

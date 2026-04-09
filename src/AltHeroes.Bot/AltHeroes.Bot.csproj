@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>altheroes-bot</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="idunno.Bluesky" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AltHeroes.Core\AltHeroes.Core.csproj" />
+    <ProjectReference Include="..\AltHeroes.ServiceDefaults\AltHeroes.ServiceDefaults.csproj" />
+  </ItemGroup>
+</Project>

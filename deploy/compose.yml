@@ -1,0 +1,38 @@
+services:
+  web:
+    image: ghcr.io/timburga/altheroes-web:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8080"   # expose on loopback only; proxy to this port
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Admin__Password: ${ADMIN_PASSWORD}
+      # Uncomment and configure once the bot is running:
+      # BotClient__BaseUrl: http://bot:8080
+      # BotClient__AdminApiKey: ${ADMIN_API_KEY}
+    networks:
+      - altheroes
+
+  # ── Bot (uncomment when ready) ───────────────────────────────────────────────
+  # bot:
+  #   image: ghcr.io/timburga/altheroes-bot:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: Production
+  #     Bot__Did: ${BOT_DID}
+  #     Bot__Handle: ${BOT_HANDLE}
+  #     Bot__AppPassword: ${BOT_APP_PASSWORD}
+  #     Labeler__Did: ${LABELER_DID}
+  #     Labeler__OzoneUrl: ${LABELER_OZONE_URL}
+  #     Jetstream__Url: ${JETSTREAM_URL:-wss://jetstream2.us-east.bsky.network/subscribe}
+  #     Admin__ApiKey: ${ADMIN_API_KEY}
+  #   volumes:
+  #     - bot-data:/app/data
+  #   networks:
+  #     - altheroes
+
+networks:
+  altheroes:
+
+# volumes:
+#   bot-data:   # uncomment with bot

@@ -6,6 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <RootNamespace>AltTextBot</RootNamespace>
+
   </PropertyGroup>
 </Project>

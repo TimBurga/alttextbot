@@ -197,6 +197,7 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 1.25rem;
+            overflow: hidden; /* clip sub-pixel grid overflow at card boundary */
         }
 
         /* Collapsed by default — expands in when the previous month is reached */
@@ -217,6 +218,7 @@
             border-width: 1px;
             margin-right: 1.5rem; /* gap between the two cards */
             opacity: 1;
+            overflow: visible; /* allow calendar to render fully — overrides base overflow:hidden */
         }
 
         /* On narrow viewports stack calendars with current month first */

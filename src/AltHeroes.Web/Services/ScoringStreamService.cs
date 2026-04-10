@@ -92,6 +92,8 @@ public sealed class ScoringStreamService(
                     var allCompliant = dayPosts.Count > 0 &&
                         dayPosts.All(p => p.Images.All(img => img.AltText?.Length >= config.AltTextMinimumLength));
                     yield return new DayCompleteEvent(currentDate.Value.ToString("yyyy-MM-dd"), allCompliant);
+                    // Brief pause so the star pop feels weighted before moving to the next day
+                    await Task.Delay(180, ct);
                     dayPosts.Clear();
                 }
 
@@ -106,7 +108,11 @@ public sealed class ScoringStreamService(
 
                     // One image event per image so the counter increments visually
                     foreach (var _ in post.Images)
+                    {
                         yield return new ImageEvent(postDate.ToString("yyyy-MM-dd"));
+                        // Paced delay so each tick is visible; cancels immediately if client disconnects
+                        await Task.Delay(80, ct);
+                    }
                 }
             }
 
@@ -119,7 +125,14 @@ public sealed class ScoringStreamService(
         {
             var allCompliant = dayPosts.All(p => p.Images.All(img => img.AltText?.Length >= config.AltTextMinimumLength));
             yield return new DayCompleteEvent(currentDate.Value.ToString("yyyy-MM-dd"), allCompliant);
+            await Task.Delay(180, ct);
         }
+
+        // Signal that we're about to calculate — lets the client show a building state
+        yield return new CalculatingEvent();
+
+        // Dramatic pause before the tier reveal
+        await Task.Delay(600, ct);
 
         // Final score
         var score = totalImagePosts == 0 ? 0.0 : compliantPosts * 100.0 / totalImagePosts;
@@ -197,4 +210,5 @@ public sealed class ScoringStreamService(
 public abstract record ScoringEvent;
 public record ImageEvent(string Date) : ScoringEvent;
 public record DayCompleteEvent(string Date, bool AllCompliant) : ScoringEvent;
+public record CalculatingEvent : ScoringEvent;
 public record DoneEvent(string Tier, double Score, int TotalImagePosts, int CompliantPosts) : ScoringEvent;

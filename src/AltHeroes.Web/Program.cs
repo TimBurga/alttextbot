@@ -122,6 +122,8 @@ app.MapGet("/stream/{did}", async (string did, ScoringStreamService scorer, Http
                 $"event: image\ndata: {{\"date\":\"{e.Date}\"}}\n\n",
             DayCompleteEvent e =>
                 $"event: day_complete\ndata: {{\"date\":\"{e.Date}\",\"allCompliant\":{(e.AllCompliant ? "true" : "false")}}}\n\n",
+            CalculatingEvent =>
+                "event: calculating\ndata: {}\n\n",
             DoneEvent e =>
                 $"event: done\ndata: {{\"tier\":\"{e.Tier}\",\"score\":{e.Score:F1},\"totalImagePosts\":{e.TotalImagePosts},\"compliantPosts\":{e.CompliantPosts}}}\n\n",
             _ => ""

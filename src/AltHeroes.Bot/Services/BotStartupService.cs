@@ -24,7 +24,6 @@ public sealed class BotStartupService(
     OzoneClient ozone,
     LabelDiffService diff,
     StartupGate startupGate,
-    IOptions<BotOptions> botOptions,
     IOptions<LabelerOptions> labelerOptions,
     IOptions<ScoringOptions> scoringOptions,
     ILogger<BotStartupService> logger) : BackgroundService

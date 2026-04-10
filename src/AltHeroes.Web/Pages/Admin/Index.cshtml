@@ -73,6 +73,7 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     overflow: hidden;
+    overflow-x: auto;
 }
 
 table {
@@ -176,6 +177,13 @@ tbody td {
     border-radius: 8px;
     padding: 1rem 1.25rem;
     margin-bottom: 1.5rem;
+}
+
+@@media (max-width: 600px) {
+    .stats-row { flex-wrap: wrap; }
+    .stat-card { min-width: 100px; flex: 1; }
+    .toolbar { flex-wrap: wrap; }
+    .toolbar input[type="search"] { width: 100%; flex-basis: 100%; }
 }
 </style>
 

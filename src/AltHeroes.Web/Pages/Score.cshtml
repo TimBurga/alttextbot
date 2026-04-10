@@ -190,8 +190,8 @@
         }
 
         .month-card {
-            flex: 1;
-            min-width: 280px;
+            flex: 1 1 280px;
+            min-width: 0;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -207,6 +207,13 @@
         #prev-month.visible {
             opacity: 1;
             transform: translateY(0);
+        }
+
+        /* On narrow viewports stack calendars with current month first */
+        @@media (max-width: 620px) {
+            #calendars { flex-direction: column; }
+            .month-card { width: 100%; }
+            #curr-month { order: -1; }
         }
 
         .month-header {
@@ -242,7 +249,6 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 44px;
         }
 
         .day-cell.active {
@@ -333,6 +339,19 @@
         }
 
         .back-link:hover { color: var(--text); }
+
+        /* ── Responsive tweaks ───────────────────────────── */
+        @@media (max-width: 480px) {
+            main { padding: 1.25rem 1rem; }
+
+            #hero-display { padding: 1.5rem 1.25rem; }
+            .hero-tier-name { font-size: 2.5rem; }
+            .hero-score { font-size: 1.25rem; }
+
+            .star { font-size: 20px; }
+            .count-wrap { font-size: 0.85rem; }
+            .day-num { font-size: 8px; }
+        }
     </style>
 </head>
 <body>

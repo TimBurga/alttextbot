@@ -97,6 +97,12 @@
         }
 
         .admin-link:hover { color: var(--text); }
+
+        @@media (max-width: 420px) {
+            form { flex-direction: column; }
+            button { width: 100%; }
+            .logo { font-size: 2rem; }
+        }
     </style>
 </head>
 <body>

@@ -1,4 +1,4 @@
-name: Publish images
+name: Publish & deploy
 
 on:
   push:
@@ -54,3 +54,20 @@ jobs:
             ${{ env.BOT_IMAGE }}:${{ github.sha }}
           cache-from: type=gha,scope=bot
           cache-to: type=gha,scope=bot,mode=max
+
+  deploy:
+    name: Deploy to VPS
+    needs: publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH and redeploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_DIR }}
+            docker compose pull
+            docker compose up -d --remove-orphans

@@ -752,11 +752,11 @@ else if (Model.Did is not null)
 
             const detailEl = document.getElementById('hero-detail');
             if (data.totalImagePosts === 0) {
-                detailEl.textContent = 'Start posting images with alt text and you\'ll earn a medal before you know it!';
+                detailEl.textContent = 'Start adding alt text to your images and you\'ll earn a medal before you know it!';
             } else if (data.tier === 'None') {
-                detailEl.textContent = `${data.compliantPosts} of ${data.totalImagePosts} captioned — keep adding alt text and you\'ll earn a medal before you know it!`;
+                detailEl.textContent = `${data.compliantPosts} of ${data.totalImagePosts} image posts include alt text — keep it up and you\'ll earn a medal before you know it!`;
             } else {
-                detailEl.textContent = `${data.compliantPosts} of ${data.totalImagePosts} image posts fully captioned`;
+                detailEl.textContent = `${data.compliantPosts} of ${data.totalImagePosts} image posts include alt text`;
             }
             detailEl.style.opacity = '0';
 

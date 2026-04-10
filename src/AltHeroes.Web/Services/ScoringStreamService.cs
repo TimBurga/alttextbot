@@ -27,7 +27,8 @@ public sealed class ScoringStreamService(
         var http = httpClientFactory.CreateClient(nameof(ScoringStreamService));
 
         // listRecords is a PDS-level API; resolve the user's PDS from their DID document first.
-        string pdsUrl;
+        // Note: yield is not allowed inside a catch clause, so we resolve outside the iterator body.
+        string? pdsUrl = null;
         try
         {
             pdsUrl = await ResolvePdsAsync(did, http, ct);
@@ -35,6 +36,10 @@ public sealed class ScoringStreamService(
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogWarning(ex, "ScoringStreamService: Failed to resolve PDS for {Did}.", did);
+        }
+
+        if (pdsUrl is null)
+        {
             yield return new DoneEvent("None", 0, 0, 0);
             yield break;
         }

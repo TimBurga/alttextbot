@@ -184,36 +184,62 @@
         /* ── Calendar containers ─────────────────────────── */
         #calendars {
             display: flex;
-            gap: 1.5rem;
             align-items: flex-start;
             flex-wrap: wrap;
+            justify-content: center; /* single card stays centered */
         }
 
         .month-card {
             flex: 1 1 280px;
             min-width: 0;
+            max-width: 420px;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 1.25rem;
         }
 
+        /* Collapsed by default — expands in when the previous month is reached */
         #prev-month {
+            max-width: 0;
+            overflow: hidden;
+            padding: 0;
+            border-width: 0;
+            margin-right: 0;
             opacity: 0;
-            transform: translateY(12px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
+            transition: max-width 0.6s ease, padding 0.6s ease, border-width 0.6s ease,
+                        margin-right 0.6s ease, opacity 0.5s ease;
         }
 
         #prev-month.visible {
+            max-width: 420px;
+            padding: 1.25rem;
+            border-width: 1px;
+            margin-right: 1.5rem; /* gap between the two cards */
             opacity: 1;
-            transform: translateY(0);
         }
 
         /* On narrow viewports stack calendars with current month first */
         @@media (max-width: 620px) {
-            #calendars { flex-direction: column; }
-            .month-card { width: 100%; }
+            #calendars { flex-direction: column; align-items: stretch; }
+            .month-card { max-width: none; width: 100%; }
             #curr-month { order: -1; }
+
+            /* Column layout: collapse by height instead of width */
+            #prev-month {
+                max-width: none;
+                max-height: 0;
+                margin-right: 0;
+                transition: max-height 0.6s ease, padding 0.6s ease, border-width 0.6s ease,
+                            margin-top 0.6s ease, opacity 0.5s ease;
+            }
+
+            #prev-month.visible {
+                max-width: none;
+                max-height: 600px;
+                margin-right: 0;
+                margin-top: 1.5rem;
+            }
         }
 
         .month-header {

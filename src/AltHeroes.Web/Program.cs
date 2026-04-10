@@ -2,6 +2,7 @@ using AltHeroes.Web.Configuration;
 using AltHeroes.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,6 +55,13 @@ builder.Services.AddRazorPages();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
+
+// Trust the X-Forwarded-Proto header from Caddy so ASP.NET Core knows
+// the original request was HTTPS (needed for cookie Secure flag + redirects).
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 if (!app.Environment.IsDevelopment())
 {

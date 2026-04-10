@@ -1,0 +1,100 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  BOT_IMAGE: ghcr.io/${{ github.repository_owner }}/altheroes-bot
+  WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/altheroes-web
+
+jobs:
+  build:
+    name: Build & push images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/AltHeroes.Web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.WEB_IMAGE }}:latest
+            ${{ env.WEB_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+
+      # Bot image is built but not deployed yet.
+      # Remove this step entirely if you never plan to deploy the bot.
+      - name: Build and push Bot image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/AltHeroes.Bot/Dockerfile
+          push: true
+          tags: |
+            ${{ env.BOT_IMAGE }}:latest
+            ${{ env.BOT_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=bot
+          cache-to: type=gha,scope=bot,mode=max
+
+  deploy:
+    name: Deploy to VPS
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: GHCR_USER,GHCR_TOKEN
+          script: |
+            # Clone repo on first run
+            if [ ! -d /opt/altheroes/.git ]; then
+              git clone https://github.com/${{ github.repository }} /opt/altheroes
+            fi
+
+            # Pull latest deploy files (compose.yml, Caddyfile)
+            git -C /opt/altheroes fetch origin main
+            git -C /opt/altheroes checkout origin/main -- deploy/
+
+            # Pull new images
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+            docker compose \
+              -f /opt/altheroes/deploy/compose.yml \
+              --env-file /opt/altheroes/deploy/.env \
+              pull
+
+            docker compose \
+              -f /opt/altheroes/deploy/compose.yml \
+              --env-file /opt/altheroes/deploy/.env \
+              up -d --remove-orphans
+
+            docker image prune -f

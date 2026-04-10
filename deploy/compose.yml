@@ -1,0 +1,55 @@
+services:
+  web:
+    image: ghcr.io/timburga/altheroes-web:latest
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Admin__Password: ${ADMIN_PASSWORD}
+      # Bot is not deployed yet — admin page will show a connection error,
+      # but the public score/lookup page works fine without it.
+      BotClient__BaseUrl: http://bot:8080
+      BotClient__AdminApiKey: ${ADMIN_API_KEY:-not-used}
+    networks:
+      - backend
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - backend
+
+  # ── Bot (uncomment when ready to deploy) ────────────────────────────────────
+  # bot:
+  #   image: ghcr.io/timburga/altheroes-bot:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: Production
+  #     Bot__Did: ${BOT_DID}
+  #     Bot__Handle: ${BOT_HANDLE}
+  #     Bot__AppPassword: ${BOT_APP_PASSWORD}
+  #     Labeler__Did: ${LABELER_DID}
+  #     Labeler__OzoneUrl: ${LABELER_OZONE_URL}
+  #     Jetstream__Url: ${JETSTREAM_URL:-wss://jetstream2.us-east.bsky.network/subscribe}
+  #     Admin__ApiKey: ${ADMIN_API_KEY}
+  #   volumes:
+  #     - bot-data:/app/data
+  #   networks:
+  #     - backend
+  # When bot is enabled, also update web's BotClient__BaseUrl above and
+  # add depends_on: [bot] to the web service.
+
+volumes:
+  caddy-data:
+  caddy-config:
+  # bot-data:    # uncomment with bot
+
+networks:
+  backend:

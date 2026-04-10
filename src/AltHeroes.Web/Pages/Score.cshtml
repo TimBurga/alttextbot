@@ -335,15 +335,15 @@
         .day-cell.inactive { opacity: 0.18; }
         .day-cell.empty {}
 
-        /* 1. Scanning pulse — follows the date currently being analyzed */
+        /* 1. Scanning pulse — background animation stays inside cell bounds */
         .day-cell.scanning {
             border-color: var(--accent) !important;
-            animation: scanPulse 0.9s ease-in-out infinite;
+            animation: scanPulse 0.85s ease-in-out infinite;
         }
 
         @@keyframes scanPulse {
-            0%, 100% { box-shadow: 0 0 6px rgba(99,102,241,0.45), inset 0 0 4px rgba(99,102,241,0.2); }
-            50%       { box-shadow: 0 0 18px rgba(99,102,241,0.75), inset 0 0 8px rgba(99,102,241,0.35); }
+            0%, 100% { background: rgba(99,102,241,0.10); box-shadow: inset 0 0 8px rgba(99,102,241,0.3); }
+            50%       { background: rgba(99,102,241,0.22); box-shadow: inset 0 0 16px rgba(99,102,241,0.5); }
         }
 
         /* 2. Golden glow for fully-captioned days */
@@ -353,16 +353,17 @@
             box-shadow: inset 0 0 14px rgba(245,158,11,0.18) !important;
         }
 
-        /* 7. Shimmer sweep on unvisited window cells */
-        .day-cell.shimmer::before {
+        /* 7. Shimmer sweep on starred (fully-captioned) days */
+        .day-cell.starred::before {
             content: '';
             position: absolute;
             inset: 0;
             border-radius: 6px;
-            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%);
+            background: linear-gradient(90deg, transparent 0%, rgba(255,220,80,0.28) 50%, transparent 100%);
             background-size: 200% 100%;
-            animation: shimmerSweep 2s ease-in-out infinite;
+            animation: shimmerSweep 2.4s ease-in-out infinite;
             pointer-events: none;
+            z-index: 0;
         }
 
         @@keyframes shimmerSweep {
@@ -575,7 +576,7 @@ else if (Model.Did is not null)
             for (let d = 1; d <= days; d++) {
                 const ds = dateStr(year, month, d);
                 if (isInWindow(year, month, d)) {
-                    html += `<div class="day-cell active shimmer" data-date="${ds}">` +
+                    html += `<div class="day-cell active" data-date="${ds}">` +
                             `<span class="day-num">${d}</span>` +
                             `<div class="star">&#11088;</div>` +
                             `<div class="count-wrap"><span class="count"></span></div>` +
@@ -608,9 +609,6 @@ else if (Model.Did is not null)
 
             const cell = document.querySelector(`[data-date="${date}"]`);
             if (!cell) return;
-
-            // 7. Remove shimmer on first encounter of this cell
-            cell.classList.remove('shimmer');
 
             // 1. Move scanning highlight to this cell
             if (scanningCell !== cell) {

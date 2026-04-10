@@ -69,6 +69,15 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 2222
           script: |
+            OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+            WEB=ghcr.io/${OWNER}/altheroes-web
+            BOT=ghcr.io/${OWNER}/altheroes-bot
+            SHA=${{ github.sha }}
+
+            sudo docker pull ${WEB}:${SHA}
+            sudo docker tag  ${WEB}:${SHA} ${WEB}:latest
+            sudo docker pull ${BOT}:${SHA}
+            sudo docker tag  ${BOT}:${SHA} ${BOT}:latest
+
             cd ${{ secrets.DEPLOY_DIR }}
-            sudo docker compose pull
             sudo docker compose up -d --remove-orphans

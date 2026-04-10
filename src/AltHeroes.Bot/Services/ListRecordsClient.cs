@@ -15,6 +15,9 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
     private HttpClient Http => httpClientFactory.CreateClient(nameof(ListRecordsClient));
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
 
+    // PDS endpoints are stable; cache them to avoid repeated plc.directory lookups.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _pdsCache = new();
+
     /// <summary>
     /// Returns all image-bearing and text posts for <paramref name="did"/> within the last
     /// <paramref name="windowDays"/> days, ordered newest-first.
@@ -29,9 +32,11 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
         var posts = new List<PostRecord>();
         string? cursor = null;
 
+        var pdsUrl = await ResolvePdsAsync(did, ct);
+
         while (true)
         {
-            var url = $"https://public.api.bsky.app/xrpc/com.atproto.repo.listRecords" +
+            var url = $"{pdsUrl}/xrpc/com.atproto.repo.listRecords" +
                       $"?repo={Uri.EscapeDataString(did)}" +
                       $"&collection=app.bsky.feed.post&limit=100" +
                       (cursor is not null ? $"&cursor={Uri.EscapeDataString(cursor)}" : "");
@@ -132,9 +137,13 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
         var profileUri = $"at://{labelerDid}/app.bsky.actor.profile/self";
         string? cursor = null;
 
+        string pdsUrl;
+        try { pdsUrl = await ResolvePdsAsync(likerDid, ct); }
+        catch { return null; }
+
         while (true)
         {
-            var url = $"https://public.api.bsky.app/xrpc/com.atproto.repo.listRecords" +
+            var url = $"{pdsUrl}/xrpc/com.atproto.repo.listRecords" +
                       $"?repo={Uri.EscapeDataString(likerDid)}" +
                       $"&collection=app.bsky.feed.like&limit=100" +
                       (cursor is not null ? $"&cursor={Uri.EscapeDataString(cursor)}" : "");
@@ -189,6 +198,47 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
         {
             ExtractImages(media, images);
         }
+    }
+
+    // ── PDS resolution ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Resolves a DID to its PDS endpoint, with in-memory caching.
+    /// did:plc → plc.directory; did:web → /.well-known/did.json on the domain.
+    /// </summary>
+    private async Task<string> ResolvePdsAsync(string did, CancellationToken ct)
+    {
+        if (_pdsCache.TryGetValue(did, out var cached))
+            return cached;
+
+        var didDocUrl = did.StartsWith("did:web:")
+            ? $"https://{did["did:web:".Length..]}/.well-known/did.json"
+            : $"https://plc.directory/{Uri.EscapeDataString(did)}";
+
+        var doc = await Http.GetFromJsonAsync<JsonElement>(didDocUrl, JsonOpts, ct);
+
+        if (doc.TryGetProperty("service", out var services))
+        {
+            foreach (var svc in services.EnumerateArray())
+            {
+                if (svc.TryGetProperty("id", out var id))
+                {
+                    var idStr = id.GetString() ?? "";
+                    if (idStr == "#atproto_pds" || idStr.EndsWith("#atproto_pds", StringComparison.Ordinal))
+                    {
+                        if (svc.TryGetProperty("serviceEndpoint", out var ep))
+                        {
+                            var url = ep.GetString()?.TrimEnd('/')
+                                      ?? throw new InvalidOperationException("Empty PDS endpoint.");
+                            _pdsCache[did] = url;
+                            return url;
+                        }
+                    }
+                }
+            }
+        }
+
+        throw new InvalidOperationException($"No #atproto_pds service found in DID document for {did}.");
     }
 
     // ── Response shapes ──────────────────────────────────────────────────────

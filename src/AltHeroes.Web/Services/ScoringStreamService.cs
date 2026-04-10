@@ -128,6 +128,9 @@ public sealed class ScoringStreamService(
             await Task.Delay(180, ct);
         }
 
+        // Signal that we're about to calculate — lets the client show a building state
+        yield return new CalculatingEvent();
+
         // Dramatic pause before the tier reveal
         await Task.Delay(600, ct);
 
@@ -207,4 +210,5 @@ public sealed class ScoringStreamService(
 public abstract record ScoringEvent;
 public record ImageEvent(string Date) : ScoringEvent;
 public record DayCompleteEvent(string Date, bool AllCompliant) : ScoringEvent;
+public record CalculatingEvent : ScoringEvent;
 public record DoneEvent(string Tier, double Score, int TotalImagePosts, int CompliantPosts) : ScoringEvent;

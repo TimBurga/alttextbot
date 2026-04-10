@@ -687,8 +687,11 @@ else if (Model.Did is not null)
             Bronze: '🥉',
             Silver: '🥈',
             Gold:   '🥇',
-            Hero:   '🏆'
+            Hero:   '👑'
         };
+
+        // For Hero the two sides are different — crown left, trophy right
+        const TIER_MEDALS_RIGHT = { ...TIER_MEDALS, Hero: '🏆' };
 
         // 6. Tier-reactive background gradients
         const TIER_BG = {
@@ -716,10 +719,11 @@ else if (Model.Did is not null)
                 ? `${data.compliantPosts} of ${data.totalImagePosts} image posts fully captioned`
                 : 'Post some images with alt text to get scored!';
 
-            // Medals
-            const medal = TIER_MEDALS[data.tier] ?? '';
-            document.getElementById('medal-left').textContent = medal;
-            document.getElementById('medal-right').textContent = medal;
+            // Medals (Hero: 👑 left, 🏆 right; others: same on both sides)
+            const medalL = TIER_MEDALS[data.tier] ?? '';
+            const medalR = TIER_MEDALS_RIGHT[data.tier] ?? '';
+            document.getElementById('medal-left').textContent = medalL;
+            document.getElementById('medal-right').textContent = medalR;
 
             // Transition: building → revealed (or cold start if no calculating event)
             card.style.display = 'block';
@@ -736,7 +740,7 @@ else if (Model.Did is not null)
             }
 
             // 8. Medal drop — staggered after card reveal
-            if (medal) {
+            if (medalL) {
                 setTimeout(() => {
                     document.getElementById('medal-left').classList.add('drop');
                     setTimeout(() =>

@@ -5,11 +5,6 @@ on:
     branches: [main]
   workflow_dispatch:
 
-env:
-  REGISTRY: ghcr.io
-  BOT_IMAGE: ghcr.io/${{ github.repository_owner }}/altheroes-bot
-  WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/altheroes-web
-
 jobs:
   publish:
     name: Build & push
@@ -20,6 +15,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set lowercase image names
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "WEB_IMAGE=ghcr.io/${OWNER}/altheroes-web" >> $GITHUB_ENV
+          echo "BOT_IMAGE=ghcr.io/${OWNER}/altheroes-bot" >> $GITHUB_ENV
 
       - uses: docker/setup-buildx-action@v3
 

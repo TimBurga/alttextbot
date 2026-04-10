@@ -562,6 +562,13 @@
         [data-theme="light"] .theme-toggle .moon { display: block; }
     </style>
 </head>
+<script>
+function toggleTheme() {
+    var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('altheroes_theme', t);
+}
+</script>
 <body>
 
 <div id="bg-glow"></div>
@@ -948,11 +955,6 @@ else if (Model.Did is not null)
                 container.appendChild(spark);
                 spark.addEventListener('animationend', () => spark.remove());
             }
-        }
-        function toggleTheme() {
-            var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', t);
-            localStorage.setItem('altheroes_theme', t);
         }
     })();
     </script>

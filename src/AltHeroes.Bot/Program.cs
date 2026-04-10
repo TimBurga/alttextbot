@@ -4,6 +4,7 @@ using AltHeroes.Bot;
 using AltHeroes.Bot.Configuration;
 using AltHeroes.Bot.Services;
 using AltHeroes.Core;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 

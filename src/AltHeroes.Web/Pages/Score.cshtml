@@ -19,7 +19,7 @@
 
         :root {
             color-scheme: dark;
-            --bg: #0f1117;
+            --bg: #0a0c12;
             --surface: #1a1d27;
             --surface2: #22263a;
             --border: #2a2d3a;
@@ -38,6 +38,21 @@
             color: var(--text);
             min-height: 100vh;
             font-size: 14px;
+        }
+
+        /* Subtle dot-grid background texture — matches landing page */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(99,102,241,0.09) 1px, transparent 1px);
+            background-size: 28px 28px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        [data-theme="light"] body::before {
+            background-image: radial-gradient(circle, rgba(99,102,241,0.13) 1px, transparent 1px);
         }
 
         /* ── Tier-reactive page background ──────────────── */
@@ -66,6 +81,10 @@
             height: 52px;
         }
 
+        [data-theme="light"] header {
+            background: rgba(240, 242, 248, 0.88);
+        }
+
         .brand {
             font-weight: 800;
             font-size: 1.1rem;
@@ -89,6 +108,8 @@
             max-width: 900px;
             margin: 0 auto;
             padding: 2rem 1.5rem;
+            position: relative;
+            z-index: 1;
         }
 
         /* ── Status bar ──────────────────────────────────── */
@@ -224,11 +245,12 @@
         }
 
         .hero-score {
-            font-size: 1.75rem;
+            font-size: 2rem;
             font-weight: 700;
             color: var(--muted);
             margin-top: 0.5rem;
             margin-bottom: 0.5rem;
+            transition: color 0.4s ease;
         }
 
         .hero-detail {
@@ -294,6 +316,18 @@
             border-radius: 12px;
             padding: 1.25rem;
             overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+        }
+
+        /* ── Calendar section label ─────────────────────── */
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 0.85rem;
+            opacity: 0.7;
         }
 
         #prev-month {
@@ -507,14 +541,24 @@
         .error-card p { font-size: 0.85rem; opacity: 0.85; }
 
         .back-link {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
             margin-top: 1rem;
             color: var(--muted);
             font-size: 0.85rem;
             text-decoration: none;
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: border-color 0.15s, color 0.15s, background 0.15s;
         }
 
-        .back-link:hover { color: var(--text); }
+        .back-link:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: rgba(99,102,241,0.07);
+        }
 
         /* ── Responsive tweaks ───────────────────────────── */
         @@media (max-width: 480px) {
@@ -531,16 +575,16 @@
         /* ── Light theme ─────────────────────────────────── */
         [data-theme="light"] {
             color-scheme: light;
-            --bg: #f4f5f9;
+            --bg: #f0f2f8;
             --surface: #ffffff;
             --surface2: #eef0f7;
-            --border: #dde1ec;
-            --text: #1a1d27;
+            --border: #d4d9ea;
+            --text: #111827;
             --muted: #6b7280;
         }
 
-        [data-theme="light"] header {
-            background: rgba(244, 245, 249, 0.88);
+        [data-theme="light"] .month-card {
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
         }
 
         /* Calendar count text in light mode */
@@ -626,6 +670,7 @@ else if (Model.Did is not null)
     </div>
 
     <!-- Calendar grid -->
+    <div class="section-label">Recent activity</div>
     <div id="calendars">
         <div class="month-card" id="prev-month">
             <div class="month-header" id="prev-month-header"></div>
@@ -816,6 +861,7 @@ else if (Model.Did is not null)
 
             const scoreEl = document.getElementById('hero-score');
             scoreEl.style.opacity = '0';
+            scoreEl.style.color = color;
 
             const detailEl = document.getElementById('hero-detail');
             if (data.totalImagePosts === 0) {

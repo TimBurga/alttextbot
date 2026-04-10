@@ -4,6 +4,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AltHeroes.Core\AltHeroes.Core.csproj" />
     <ProjectReference Include="..\AltHeroes.ServiceDefaults\AltHeroes.ServiceDefaults.csproj" />
   </ItemGroup>
 </Project>

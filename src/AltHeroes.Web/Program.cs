@@ -17,12 +17,22 @@ builder.Services.AddOptions<AdminOptions>()
 builder.Services.AddOptions<BotClientOptions>()
     .BindConfiguration(BotClientOptions.SectionName);
 
-// ── Bot admin client ──────────────────────────────────────────────────────────
+builder.Services.AddOptions<ScoringOptions>()
+    .BindConfiguration(ScoringOptions.SectionName);
+
+// ── HTTP clients ──────────────────────────────────────────────────────────────
 builder.Services.AddHttpClient<BotAdminClient>((sp, client) =>
 {
     var opts = sp.GetRequiredService<IOptions<BotClientOptions>>().Value;
     client.BaseAddress = new Uri(opts.BaseUrl);
 });
+
+builder.Services.AddHttpClient(nameof(HandleResolver));
+builder.Services.AddHttpClient(nameof(ScoringStreamService));
+
+// ── Public scoring services ───────────────────────────────────────────────────
+builder.Services.AddSingleton<HandleResolver>();
+builder.Services.AddSingleton<ScoringStreamService>();
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -88,5 +98,31 @@ app.MapPost("/admin/api/rescore/{did}", async (string did, BotAdminClient bot, H
     var result = await bot.RescoreAsync(did, ct);
     return result is not null ? Results.Ok(result) : Results.Problem("Bot returned an error.");
 }).RequireAuthorization();
+
+// ── Public SSE scoring stream ─────────────────────────────────────────────────
+app.MapGet("/stream/{did}", async (string did, ScoringStreamService scorer, HttpContext ctx, CancellationToken ct) =>
+{
+    ctx.Response.ContentType = "text/event-stream";
+    ctx.Response.Headers.CacheControl = "no-cache";
+    ctx.Response.Headers["X-Accel-Buffering"] = "no";
+
+    await foreach (var evt in scorer.StreamAsync(did, ct))
+    {
+        var line = evt switch
+        {
+            ImageEvent e =>
+                $"event: image\ndata: {{\"date\":\"{e.Date}\"}}\n\n",
+            DayCompleteEvent e =>
+                $"event: day_complete\ndata: {{\"date\":\"{e.Date}\",\"allCompliant\":{(e.AllCompliant ? "true" : "false")}}}\n\n",
+            DoneEvent e =>
+                $"event: done\ndata: {{\"tier\":\"{e.Tier}\",\"score\":{e.Score:F1},\"totalImagePosts\":{e.TotalImagePosts},\"compliantPosts\":{e.CompliantPosts}}}\n\n",
+            _ => ""
+        };
+
+        if (line.Length == 0) continue;
+        await ctx.Response.WriteAsync(line, ct);
+        await ctx.Response.Body.FlushAsync(ct);
+    }
+});
 
 app.Run();

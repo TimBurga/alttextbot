@@ -1,0 +1,114 @@
+@page
+@model AltHeroes.Web.Pages.IndexModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AltHeroes — Check your alt text score</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --border: #2a2d3a;
+            --text: #e2e4ed;
+            --muted: #6b7280;
+            --accent: #6366f1;
+            --hero: #a855f7;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--hero));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            color: var(--muted);
+            font-size: 1rem;
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+            padding: 0.75rem 1rem;
+            transition: border-color 0.15s;
+        }
+
+        input[type="text"]:focus { border-color: var(--accent); }
+        input[type="text"]::placeholder { color: var(--muted); }
+
+        button {
+            background: linear-gradient(135deg, var(--accent), var(--hero));
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: opacity 0.15s;
+            white-space: nowrap;
+        }
+
+        button:hover { opacity: 0.85; }
+
+        .admin-link {
+            margin-top: 3rem;
+            font-size: 12px;
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        .admin-link:hover { color: var(--text); }
+    </style>
+</head>
+<body>
+    <div class="logo">AltHeroes</div>
+    <p class="tagline">See how consistently you add alt text to your Bluesky images.</p>
+
+    <form method="get" action="/score">
+        <input type="text" name="q" placeholder="handle.bsky.social or did:plc:…"
+               value="@Model.Q" autocomplete="off" autofocus />
+        <button type="submit">Check</button>
+    </form>
+
+    <a class="admin-link" href="/admin">Admin</a>
+</body>
+</html>

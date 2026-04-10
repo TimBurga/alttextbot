@@ -1,0 +1,554 @@
+@page "/score"
+@model AltHeroes.Web.Pages.ScoreModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AltHeroes — @(Model.Q ?? "Score")</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #22263a;
+            --border: #2a2d3a;
+            --text: #e2e4ed;
+            --muted: #6b7280;
+            --accent: #6366f1;
+            --none: #6b7280;
+            --bronze: #cd7f32;
+            --silver: #94a3b8;
+            --gold: #f59e0b;
+            --hero: #a855f7;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* ── Header ─────────────────────────────────────── */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            height: 52px;
+        }
+
+        .brand {
+            font-weight: 800;
+            font-size: 1.1rem;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), var(--hero));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-query {
+            color: var(--muted);
+            font-size: 0.85rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ── Main layout ─────────────────────────────────── */
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* ── Status bar ──────────────────────────────────── */
+        #status-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.75rem;
+            color: var(--muted);
+            font-size: 0.85rem;
+            min-height: 24px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulseDot 1.2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        @@keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.7); }
+        }
+
+        /* ── Hero result card ────────────────────────────── */
+        #hero-display {
+            display: none;
+            opacity: 0;
+            margin-bottom: 2rem;
+            border-radius: 16px;
+            border: 2px solid var(--border);
+            padding: 2rem 2.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%);
+        }
+
+        #hero-display.revealed {
+            animation: heroReveal 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @@keyframes heroReveal {
+            0%   { opacity: 0; transform: translateY(-16px) scale(0.92); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .hero-tier-name {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-score {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-detail {
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        .hero-glow {
+            position: absolute;
+            inset: 0;
+            border-radius: 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease 0.65s;
+        }
+
+        #hero-display.revealed .hero-glow {
+            opacity: 1;
+            animation: glowPulse 2s ease-in-out 0.65s infinite alternate;
+        }
+
+        @@keyframes glowPulse {
+            from { box-shadow: inset 0 0 40px var(--tier-color, transparent); }
+            to   { box-shadow: inset 0 0 80px var(--tier-color, transparent); }
+        }
+
+        /* Spark burst particles (Hero tier only) */
+        .sparks {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .spark {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--hero);
+            animation: sparkFly 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        @@keyframes sparkFly {
+            0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
+        }
+
+        /* ── Calendar containers ─────────────────────────── */
+        #calendars {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .month-card {
+            flex: 1;
+            min-width: 280px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        #prev-month {
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        #prev-month.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .month-header {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.02em;
+        }
+
+        /* ── Calendar grid ───────────────────────────────── */
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+        }
+
+        .day-label {
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--muted);
+            padding: 4px 0 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .day-cell {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 7px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+        }
+
+        .day-cell.active {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+        }
+
+        .day-cell.inactive {
+            opacity: 0.18;
+        }
+
+        .day-cell.empty { /* spacer */ }
+
+        .day-num {
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            font-size: 9px;
+            color: var(--muted);
+            line-height: 1;
+        }
+
+        /* Star behind the count */
+        .star {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 26px;
+            line-height: 1;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 0;
+            filter: drop-shadow(0 0 6px #f59e0b80);
+        }
+
+        .star.show {
+            animation: starBurst 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @@keyframes starBurst {
+            0%   { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(-30deg); }
+            60%  { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(8deg); }
+            100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        }
+
+        .count-wrap {
+            position: relative;
+            z-index: 1;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            min-height: 1.2em;
+        }
+
+        .count:empty::before { content: '·'; color: transparent; }
+
+        /* Pop animation on count increment */
+        .day-cell.pop .count-wrap {
+            animation: countPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @@keyframes countPop {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.55); }
+            100% { transform: scale(1); }
+        }
+
+        /* ── Error / not-found ───────────────────────────── */
+        .error-card {
+            background: color-mix(in srgb, #ef4444 10%, var(--surface));
+            border: 1px solid #ef4444;
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            color: #ef4444;
+            margin-bottom: 1.5rem;
+        }
+
+        .error-card h2 { font-size: 1rem; margin-bottom: 0.25rem; }
+        .error-card p { font-size: 0.85rem; opacity: 0.85; }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--muted);
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .back-link:hover { color: var(--text); }
+    </style>
+</head>
+<body>
+<header>
+    <a class="brand" href="/">AltHeroes</a>
+    <span class="header-query">@Model.Q</span>
+</header>
+
+<main>
+
+@if (Model.Error is not null)
+{
+    <div class="error-card">
+        <h2>Not found</h2>
+        <p>@Model.Error</p>
+    </div>
+    <a class="back-link" href="/">← Try another handle</a>
+}
+else if (Model.Did is not null)
+{
+    <!-- Status bar (hidden once done) -->
+    <div id="status-bar">
+        <div class="pulse-dot"></div>
+        <span id="status-text">Loading posts for @Model.Q…</span>
+    </div>
+
+    <!-- Final result card (revealed on done) -->
+    <div id="hero-display" aria-live="polite">
+        <div class="hero-glow" id="hero-glow"></div>
+        <div class="sparks" id="sparks"></div>
+        <div class="hero-tier-name" id="hero-tier"></div>
+        <div class="hero-score" id="hero-score"></div>
+        <div class="hero-detail" id="hero-detail"></div>
+    </div>
+
+    <!-- Calendar grid -->
+    <div id="calendars">
+        <div class="month-card" id="prev-month">
+            <div class="month-header" id="prev-month-header"></div>
+            <div class="cal-grid" id="prev-month-grid"></div>
+        </div>
+        <div class="month-card" id="curr-month">
+            <div class="month-header" id="curr-month-header"></div>
+            <div class="cal-grid" id="curr-month-grid"></div>
+        </div>
+    </div>
+
+    <script>
+    (() => {
+        const DID = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Did));
+        const WINDOW_DAYS = @Model.WindowDays;
+
+        // ── Date helpers ──────────────────────────────────────────────────
+        const now = new Date();
+        // Work in UTC throughout so date strings from the server match
+        const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+        const cutoffUTC = new Date(todayUTC.getTime() - WINDOW_DAYS * 86400000);
+
+        const MONTH_NAMES = ['January','February','March','April','May','June',
+                             'July','August','September','October','November','December'];
+        const DAY_LABELS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+        let currYear = todayUTC.getUTCFullYear();
+        let currMonth = todayUTC.getUTCMonth(); // 0-indexed
+        let prevYear = currYear, prevMonth = currMonth - 1;
+        if (prevMonth < 0) { prevMonth = 11; prevYear--; }
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+        function dateStr(y, m, d) { return `${y}-${pad(m+1)}-${pad(d)}`; }
+        function isInWindow(y, m, d) {
+            const t = Date.UTC(y, m, d);
+            return t >= cutoffUTC.getTime() && t <= todayUTC.getTime();
+        }
+
+        // ── Calendar generation ───────────────────────────────────────────
+        function buildCalendar(year, month, headerId, gridId) {
+            document.getElementById(headerId).textContent = `${MONTH_NAMES[month]} ${year}`;
+            const grid = document.getElementById(gridId);
+
+            let html = DAY_LABELS.map(d => `<div class="day-label">${d}</div>`).join('');
+
+            const firstDow = new Date(Date.UTC(year, month, 1)).getUTCDay();
+            for (let i = 0; i < firstDow; i++) html += `<div class="day-cell empty"></div>`;
+
+            const days = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+            for (let d = 1; d <= days; d++) {
+                const ds = dateStr(year, month, d);
+                if (isInWindow(year, month, d)) {
+                    html += `<div class="day-cell active" data-date="${ds}">` +
+                            `<span class="day-num">${d}</span>` +
+                            `<div class="star">&#11088;</div>` +
+                            `<div class="count-wrap"><span class="count"></span></div>` +
+                            `</div>`;
+                } else {
+                    html += `<div class="day-cell inactive"><span class="day-num">${d}</span></div>`;
+                }
+            }
+            grid.innerHTML = html;
+        }
+
+        buildCalendar(currYear, currMonth, 'curr-month-header', 'curr-month-grid');
+        buildCalendar(prevYear, prevMonth, 'prev-month-header', 'prev-month-grid');
+
+        // ── SSE stream ────────────────────────────────────────────────────
+        const source = new EventSource('/stream/' + encodeURIComponent(DID));
+        let prevMonthVisible = false;
+        let imageCount = 0;
+
+        source.addEventListener('image', e => {
+            const { date } = JSON.parse(e.data);
+            imageCount++;
+
+            // Reveal previous month when we hit a date in it
+            if (!prevMonthVisible && date.startsWith(`${prevYear}-${pad(prevMonth + 1)}`)) {
+                document.getElementById('prev-month').classList.add('visible');
+                prevMonthVisible = true;
+            }
+
+            const cell = document.querySelector(`[data-date="${date}"]`);
+            if (!cell) return;
+
+            const countEl = cell.querySelector('.count');
+            if (!countEl) return;
+            countEl.textContent = (parseInt(countEl.textContent) || 0) + 1;
+
+            // Pop animation — remove/re-add class to retrigger
+            cell.classList.remove('pop');
+            void cell.offsetWidth;
+            cell.classList.add('pop');
+
+            // Update status
+            document.getElementById('status-text').textContent =
+                `Analyzed ${imageCount} image${imageCount !== 1 ? 's' : ''}…`;
+        });
+
+        source.addEventListener('day_complete', e => {
+            const { date, allCompliant } = JSON.parse(e.data);
+            if (!allCompliant) return;
+            const cell = document.querySelector(`[data-date="${date}"]`);
+            cell?.querySelector('.star')?.classList.add('show');
+        });
+
+        source.addEventListener('done', e => {
+            source.close();
+            const data = JSON.parse(e.data);
+            showResult(data);
+        });
+
+        source.onerror = () => {
+            source.close();
+            document.getElementById('status-text').textContent = 'Connection error — please reload.';
+            document.querySelector('.pulse-dot').style.background = '#ef4444';
+        };
+
+        // ── Final result reveal ───────────────────────────────────────────
+        const TIER_COLORS = {
+            None: '#6b7280',
+            Bronze: '#cd7f32',
+            Silver: '#94a3b8',
+            Gold: '#f59e0b',
+            Hero: '#a855f7'
+        };
+
+        function showResult(data) {
+            // Remove status bar
+            document.getElementById('status-bar').remove();
+
+            const color = TIER_COLORS[data.tier] ?? '#6b7280';
+            const card = document.getElementById('hero-display');
+            card.style.borderColor = color;
+            card.style.setProperty('--tier-color', color + '30');
+
+            document.getElementById('hero-tier').textContent = data.tier;
+            document.getElementById('hero-tier').style.color = color;
+            document.getElementById('hero-score').textContent =
+                data.totalImagePosts === 0 ? 'No image posts in the last 30 days'
+                : data.score.toFixed(1) + '%';
+            document.getElementById('hero-detail').textContent =
+                data.totalImagePosts > 0
+                ? `${data.compliantPosts} of ${data.totalImagePosts} image posts fully captioned`
+                : 'Post some images with alt text to get scored!';
+
+            card.style.display = 'block';
+            requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('revealed')));
+
+            if (data.tier === 'Hero') launchSparks(card, color);
+        }
+
+        function launchSparks(card, color) {
+            const container = document.getElementById('sparks');
+            const cx = card.offsetWidth / 2;
+            const cy = card.offsetHeight / 2;
+            for (let i = 0; i < 24; i++) {
+                const spark = document.createElement('div');
+                spark.className = 'spark';
+                spark.style.background = color;
+                spark.style.left = cx + 'px';
+                spark.style.top = cy + 'px';
+                const angle = (i / 24) * 2 * Math.PI + (Math.random() - 0.5) * 0.5;
+                const dist = 60 + Math.random() * 100;
+                spark.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+                spark.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+                spark.style.animationDelay = (Math.random() * 0.3) + 's';
+                container.appendChild(spark);
+                spark.addEventListener('animationend', () => spark.remove());
+            }
+        }
+    })();
+    </script>
+}
+else
+{
+    <!-- Fallback: no DID and no error — redirect -->
+    <script>location.href = '/';</script>
+}
+
+</main>
+</body>
+</html>

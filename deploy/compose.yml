@@ -2,31 +2,18 @@ services:
   web:
     image: ghcr.io/timburga/altheroes-web:latest
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8080"   # expose on loopback only; proxy to this port
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       Admin__Password: ${ADMIN_PASSWORD}
-      # Bot is not deployed yet — admin page will show a connection error,
-      # but the public score/lookup page works fine without it.
-      BotClient__BaseUrl: http://bot:8080
-      BotClient__AdminApiKey: ${ADMIN_API_KEY:-not-used}
+      # Uncomment and configure once the bot is running:
+      # BotClient__BaseUrl: http://bot:8080
+      # BotClient__AdminApiKey: ${ADMIN_API_KEY}
     networks:
-      - backend
+      - altheroes
 
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-      - caddy-config:/config
-    networks:
-      - backend
-
-  # ── Bot (uncomment when ready to deploy) ────────────────────────────────────
+  # ── Bot (uncomment when ready) ───────────────────────────────────────────────
   # bot:
   #   image: ghcr.io/timburga/altheroes-bot:latest
   #   restart: unless-stopped
@@ -42,14 +29,10 @@ services:
   #   volumes:
   #     - bot-data:/app/data
   #   networks:
-  #     - backend
-  # When bot is enabled, also update web's BotClient__BaseUrl above and
-  # add depends_on: [bot] to the web service.
-
-volumes:
-  caddy-data:
-  caddy-config:
-  # bot-data:    # uncomment with bot
+  #     - altheroes
 
 networks:
-  backend:
+  altheroes:
+
+# volumes:
+#   bot-data:   # uncomment with bot

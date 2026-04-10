@@ -751,9 +751,13 @@ else if (Model.Did is not null)
             scoreEl.style.opacity = '0';
 
             const detailEl = document.getElementById('hero-detail');
-            detailEl.textContent = data.totalImagePosts > 0
-                ? `${data.compliantPosts} of ${data.totalImagePosts} image posts fully captioned`
-                : 'No image posts found in the last 30 days';
+            if (data.totalImagePosts === 0) {
+                detailEl.textContent = 'Start posting images with alt text and you\'ll earn a medal before you know it!';
+            } else if (data.tier === 'None') {
+                detailEl.textContent = `${data.compliantPosts} of ${data.totalImagePosts} captioned — keep adding alt text and you\'ll earn a medal before you know it!`;
+            } else {
+                detailEl.textContent = `${data.compliantPosts} of ${data.totalImagePosts} image posts fully captioned`;
+            }
             detailEl.style.opacity = '0';
 
             // Medals

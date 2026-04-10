@@ -8,11 +8,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
     <title>AltHeroes — Check your alt text score</title>
+    <script>(function(){var t=localStorage.getItem('altheroes_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();</script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
+            color-scheme: dark;
             --bg: #0f1117;
             --surface: #1a1d27;
             --border: #2a2d3a;
@@ -20,6 +23,15 @@
             --muted: #6b7280;
             --accent: #6366f1;
             --hero: #a855f7;
+        }
+
+        [data-theme="light"] {
+            color-scheme: light;
+            --bg: #f4f5f9;
+            --surface: #ffffff;
+            --border: #dde1ec;
+            --text: #1a1d27;
+            --muted: #6b7280;
         }
 
         body {
@@ -98,6 +110,31 @@
 
         .admin-link:hover { color: var(--text); }
 
+        /* ── Theme toggle (floating, top-right) ─────────── */
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0.4rem 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+        .theme-toggle .sun { display: block; }
+        .theme-toggle .moon { display: none; }
+        [data-theme="light"] .theme-toggle .sun { display: none; }
+        [data-theme="light"] .theme-toggle .moon { display: block; }
+
         @@media (max-width: 420px) {
             form { flex-direction: column; }
             button { width: 100%; }
@@ -106,6 +143,10 @@
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg class="sun" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
     <div class="logo">AltHeroes</div>
     <p class="tagline">See how consistently you add alt text to your Bluesky images.</p>
 
@@ -116,5 +157,12 @@
     </form>
 
     <a class="admin-link" href="/admin">Admin</a>
+    <script>
+    function toggleTheme() {
+        var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('altheroes_theme', t);
+    }
+    </script>
 </body>
 </html>

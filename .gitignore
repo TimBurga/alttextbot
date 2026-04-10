@@ -52,5 +52,8 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+# Visual Studio local workspace files
+.vs/
+
 # Deployment secrets — never commit the real .env
 deploy/.env

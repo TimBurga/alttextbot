@@ -4,6 +4,7 @@
     <Project Path="src/AltHeroes.ServiceDefaults/AltHeroes.ServiceDefaults.csproj" />
     <Project Path="src/AltHeroes.Core/AltHeroes.Core.csproj" />
     <Project Path="src/AltHeroes.Bot/AltHeroes.Bot.csproj" />
+    <Project Path="src/AltHeroes.Web/AltHeroes.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/AltHeroes.Core.Tests/AltHeroes.Core.Tests.csproj" />

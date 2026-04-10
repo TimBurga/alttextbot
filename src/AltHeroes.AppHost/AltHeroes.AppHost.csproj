@@ -13,5 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AltHeroes.Bot\AltHeroes.Bot.csproj" />
+    <ProjectReference Include="..\AltHeroes.Web\AltHeroes.Web.csproj" />
   </ItemGroup>
 </Project>

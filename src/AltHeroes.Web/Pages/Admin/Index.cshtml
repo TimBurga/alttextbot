@@ -1,0 +1,357 @@
+@page "/admin"
+@model AltHeroes.Web.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Subscribers";
+}
+
+<style>
+.stats-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    min-width: 140px;
+}
+
+.stat-card .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+}
+
+.stat-card .value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.toolbar input[type="search"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 0.45rem 0.75rem;
+    font-size: 13px;
+    outline: none;
+    width: 280px;
+    transition: border-color 0.15s;
+}
+
+.toolbar input[type="search"]:focus { border-color: var(--accent); }
+
+.toolbar .filter-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0.4rem 0.75rem;
+    transition: all 0.15s;
+}
+
+.toolbar .filter-btn:hover,
+.toolbar .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+
+.table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+}
+
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+tbody tr.blocked-row { opacity: 0.55; }
+
+tbody td {
+    padding: 0.65rem 1rem;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+.did-cell {
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 340px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tier-badge {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.tier-None   { background: color-mix(in srgb, var(--none)   20%, transparent); color: var(--none);   }
+.tier-Bronze { background: color-mix(in srgb, var(--bronze) 20%, transparent); color: var(--bronze); }
+.tier-Silver { background: color-mix(in srgb, var(--silver) 20%, transparent); color: var(--silver); }
+.tier-Gold   { background: color-mix(in srgb, var(--gold)   20%, transparent); color: var(--gold);   }
+.tier-Hero   { background: color-mix(in srgb, var(--hero)   20%, transparent); color: var(--hero);   }
+
+.blocked-badge {
+    display: inline-block;
+    background: color-mix(in srgb, var(--danger) 20%, transparent);
+    color: var(--danger);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.actions { display: flex; gap: 0.4rem; }
+
+.btn {
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 0.3rem 0.65rem;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+}
+
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn:hover:not(:disabled) { opacity: 0.85; }
+
+.btn-block    { background: color-mix(in srgb, var(--danger)  25%, transparent); color: var(--danger); }
+.btn-unblock  { background: color-mix(in srgb, var(--success) 25%, transparent); color: var(--success); }
+.btn-rescore  { background: color-mix(in srgb, var(--accent)  25%, transparent); color: var(--accent); }
+
+.empty-row td {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+}
+
+.error-banner {
+    background: color-mix(in srgb, var(--danger) 15%, transparent);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+</style>
+
+@if (Model.Error is not null)
+{
+    <div class="error-banner">⚠️ @Model.Error</div>
+}
+else if (Model.Subscribers is { } subs)
+{
+    var blocked = subs.Items.Count(s => s.Blocked);
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="label">Subscribers</div>
+            <div class="value">@subs.Count</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Blocked</div>
+            <div class="value">@blocked</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Active</div>
+            <div class="value">@(subs.Count - blocked)</div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <input type="search" id="search" placeholder="Filter by DID…" oninput="filterTable()" />
+        <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All</button>
+        <button class="filter-btn" id="filter-blocked" onclick="setFilter('blocked')">Blocked only</button>
+        <button class="filter-btn" id="filter-active" onclick="setFilter('active')">Active only</button>
+    </div>
+
+    <div class="table-wrap">
+        <table id="sub-table">
+            <thead>
+                <tr>
+                    <th>DID</th>
+                    <th>Tier</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="sub-body">
+                @foreach (var sub in subs.Items.OrderBy(s => s.Blocked).ThenBy(s => s.Did))
+                {
+                    <tr class="@(sub.Blocked ? "blocked-row" : "")" data-did="@sub.Did" data-blocked="@sub.Blocked.ToString().ToLower()" data-tier="@sub.Tier">
+                        <td class="did-cell" title="@sub.Did">@sub.Did</td>
+                        <td><span class="tier-badge tier-@sub.Tier">@sub.Tier</span></td>
+                        <td>@if (sub.Blocked) { <span class="blocked-badge">Blocked</span> } else { <span style="color:var(--muted)">—</span> }</td>
+                        <td class="actions">
+                            @if (sub.Blocked)
+                            {
+                                <button class="btn btn-unblock" onclick="unblock(this, '@sub.Did')">Unblock</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-block" onclick="block(this, '@sub.Did')">Block</button>
+                            }
+                            <button class="btn btn-rescore" onclick="rescore(this, '@sub.Did')" @(sub.Blocked ? "disabled" : "")>Rescore</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p style="color:var(--muted)">Loading…</p>
+}
+
+@section Scripts {
+<script>
+let activeFilter = 'all';
+
+function setFilter(f) {
+    activeFilter = f;
+    ['all','blocked','active'].forEach(id => {
+        document.getElementById('filter-' + id)?.classList.toggle('active', id === f);
+    });
+    filterTable();
+}
+
+function filterTable() {
+    const q = document.getElementById('search')?.value.toLowerCase() ?? '';
+    document.querySelectorAll('#sub-body tr').forEach(row => {
+        const did = row.dataset.did?.toLowerCase() ?? '';
+        const isBlocked = row.dataset.blocked === 'true';
+        const matchesSearch = did.includes(q);
+        const matchesFilter =
+            activeFilter === 'all' ? true :
+            activeFilter === 'blocked' ? isBlocked :
+            !isBlocked;
+        row.style.display = matchesSearch && matchesFilter ? '' : 'none';
+    });
+}
+
+async function block(btn, did) {
+    if (!confirm(`Block ${did}?\n\nThis will stop scoring and labeling for this subscriber.`)) return;
+    await action(btn, 'POST', `/admin/api/block/${encodeURIComponent(did)}`, () => {
+        updateRow(did, true);
+        toast(`Blocked ${did.slice(0, 20)}…`);
+    }, 'Failed to block');
+}
+
+async function unblock(btn, did) {
+    await action(btn, 'DELETE', `/admin/api/block/${encodeURIComponent(did)}`, () => {
+        updateRow(did, false);
+        toast(`Unblocked ${did.slice(0, 20)}…`);
+    }, 'Failed to unblock');
+}
+
+async function rescore(btn, did) {
+    await action(btn, 'POST', `/admin/api/rescore/${encodeURIComponent(did)}`, (data) => {
+        const row = document.querySelector(`tr[data-did="${did}"]`);
+        if (row) {
+            row.dataset.tier = data.tier;
+            const badge = row.querySelector('.tier-badge');
+            if (badge) {
+                badge.className = `tier-badge tier-${data.tier}`;
+                badge.textContent = data.tier;
+            }
+        }
+        toast(`Rescored ${did.slice(0, 20)}… → ${data.tier} (${data.score.toFixed(1)}%)`);
+    }, 'Failed to rescore');
+}
+
+function updateRow(did, blocked) {
+    const row = document.querySelector(`tr[data-did="${did}"]`);
+    if (!row) return;
+    row.dataset.blocked = String(blocked);
+    row.classList.toggle('blocked-row', blocked);
+
+    const statusCell = row.cells[2];
+    statusCell.innerHTML = blocked
+        ? '<span class="blocked-badge">Blocked</span>'
+        : '<span style="color:var(--muted)">—</span>';
+
+    const actionsCell = row.cells[3];
+    const blockBtn = actionsCell.querySelector('.btn-block, .btn-unblock');
+    const rescoreBtn = actionsCell.querySelector('.btn-rescore');
+    if (blockBtn) {
+        if (blocked) {
+            blockBtn.className = 'btn btn-unblock';
+            blockBtn.textContent = 'Unblock';
+            blockBtn.setAttribute('onclick', `unblock(this, '${did}')`);
+        } else {
+            blockBtn.className = 'btn btn-block';
+            blockBtn.textContent = 'Block';
+            blockBtn.setAttribute('onclick', `block(this, '${did}')`);
+        }
+    }
+    if (rescoreBtn) rescoreBtn.disabled = blocked;
+}
+
+async function action(btn, method, url, onSuccess, errPrefix) {
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = '…';
+    try {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        const resp = await fetch(url, {
+            method,
+            headers: token ? { 'RequestVerificationToken': token } : {}
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = resp.headers.get('content-type')?.includes('json') ? await resp.json() : null;
+        onSuccess(data);
+    } catch (e) {
+        toast(`${errPrefix}: ${e.message}`, 'error');
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+</script>
+@Html.AntiForgeryToken()
+}

@@ -11,6 +11,9 @@
     <meta name="color-scheme" content="dark light" />
     <title>AltHeroes — @(Model.Q ?? "Score")</title>
     <script>(function(){var t=localStorage.getItem('altheroes_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -30,7 +33,7 @@
         }
 
         body {
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
@@ -49,7 +52,12 @@
 
         /* ── Header ─────────────────────────────────────── */
         header {
-            background: var(--surface);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 12, 18, 0.82);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             border-bottom: 1px solid var(--border);
             padding: 0 1.5rem;
             display: flex;
@@ -529,6 +537,10 @@
             --border: #dde1ec;
             --text: #1a1d27;
             --muted: #6b7280;
+        }
+
+        [data-theme="light"] header {
+            background: rgba(244, 245, 249, 0.88);
         }
 
         /* Calendar count text in light mode */

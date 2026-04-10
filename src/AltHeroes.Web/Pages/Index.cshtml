@@ -10,16 +10,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark light" />
     <title>AltHeroes — Check your alt text score</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script>(function(){var t=localStorage.getItem('altheroes_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();</script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
             color-scheme: dark;
-            --bg: #0f1117;
-            --surface: #1a1d27;
-            --border: #2a2d3a;
-            --text: #e2e4ed;
+            --bg: #0a0c12;
+            --surface: #13151f;
+            --border: #252836;
+            --text: #e8eaf2;
             --muted: #6b7280;
             --accent: #6366f1;
             --hero: #a855f7;
@@ -27,15 +30,15 @@
 
         [data-theme="light"] {
             color-scheme: light;
-            --bg: #f4f5f9;
+            --bg: #f0f2f8;
             --surface: #ffffff;
-            --border: #dde1ec;
-            --text: #1a1d27;
+            --border: #d4d9ea;
+            --text: #111827;
             --muted: #6b7280;
         }
 
         body {
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
@@ -44,14 +47,57 @@
             align-items: center;
             justify-content: center;
             padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Subtle dot-grid background texture */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(99,102,241,0.09) 1px, transparent 1px);
+            background-size: 28px 28px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        [data-theme="light"] body::before {
+            background-image: radial-gradient(circle, rgba(99,102,241,0.13) 1px, transparent 1px);
+        }
+
+        /* Ambient glow behind the hero content */
+        body::after {
+            content: '';
+            position: fixed;
+            width: 900px;
+            height: 700px;
+            background: radial-gradient(ellipse at center, rgba(99,102,241,0.13) 0%, rgba(168,85,247,0.06) 45%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -55%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            max-width: 520px;
         }
 
         .logo {
-            font-size: 2.5rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--accent), var(--hero));
+            font-size: 3.25rem;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #818cf8 0%, #a855f7 55%, #ec4899 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -60,61 +106,105 @@
         .tagline {
             color: var(--muted);
             font-size: 1rem;
-            margin-bottom: 2.5rem;
-            text-align: center;
+            font-weight: 400;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            max-width: 360px;
         }
 
         form {
             display: flex;
             gap: 0.5rem;
             width: 100%;
-            max-width: 480px;
+            margin-bottom: 1.5rem;
         }
 
         input[type="text"] {
             flex: 1;
             background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
             color: var(--text);
-            font-size: 1rem;
+            font-family: inherit;
+            font-size: 0.95rem;
             outline: none;
-            padding: 0.75rem 1rem;
-            transition: border-color 0.15s;
+            padding: 0.8rem 1.1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        input[type="text"]:focus { border-color: var(--accent); }
+        input[type="text"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+        }
+
         input[type="text"]::placeholder { color: var(--muted); }
 
         button {
             background: linear-gradient(135deg, var(--accent), var(--hero));
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             color: #fff;
             cursor: pointer;
-            font-size: 1rem;
+            font-family: inherit;
+            font-size: 0.95rem;
             font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            transition: opacity 0.15s;
+            padding: 0.8rem 1.5rem;
+            transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
             white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(99,102,241,0.3);
         }
 
-        button:hover { opacity: 0.85; }
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+        }
+
+        button:active { transform: translateY(0); }
+
+        /* Tier preview chips */
+        .tier-preview {
+            display: flex;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tier-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: 1px solid;
+        }
+
+        .tier-chip.bronze { color: #cd7f32; border-color: rgba(205,127,50,0.35);  background: rgba(205,127,50,0.08);  }
+        .tier-chip.silver { color: #94a3b8; border-color: rgba(148,163,184,0.35); background: rgba(148,163,184,0.08); }
+        .tier-chip.gold   { color: #f59e0b; border-color: rgba(245,158,11,0.35);  background: rgba(245,158,11,0.08);  }
+        .tier-chip.hero   { color: #a855f7; border-color: rgba(168,85,247,0.35);  background: rgba(168,85,247,0.08);  }
 
         .admin-link {
+            position: relative;
+            z-index: 1;
             margin-top: 3rem;
-            font-size: 12px;
+            font-size: 11px;
             color: var(--muted);
             text-decoration: none;
+            opacity: 0.55;
+            transition: opacity 0.15s;
         }
 
-        .admin-link:hover { color: var(--text); }
+        .admin-link:hover { opacity: 1; }
 
         /* ── Theme toggle (floating, top-right) ─────────── */
         .theme-toggle {
             position: fixed;
             top: 1rem;
             right: 1rem;
+            z-index: 10;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -138,7 +228,7 @@
         @@media (max-width: 420px) {
             form { flex-direction: column; }
             button { width: 100%; }
-            .logo { font-size: 2rem; }
+            .logo { font-size: 2.5rem; }
         }
     </style>
 </head>
@@ -147,14 +237,24 @@
         <svg class="sun" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
-    <div class="logo">AltHeroes</div>
-    <p class="tagline">See how consistently you add alt text to your Bluesky images.</p>
 
-    <form method="get" action="/score">
-        <input type="text" name="q" placeholder="handle.bsky.social or did:plc:…"
-               value="@Model.Q" autocomplete="off" autofocus />
-        <button type="submit">Check</button>
-    </form>
+    <div class="hero">
+        <div class="logo">AltHeroes</div>
+        <p class="tagline">See how consistently you add alt text to your Bluesky images.</p>
+
+        <form method="get" action="/score">
+            <input type="text" name="q" placeholder="handle.bsky.social or did:plc:…"
+                   value="@Model.Q" autocomplete="off" autofocus />
+            <button type="submit">Check</button>
+        </form>
+
+        <div class="tier-preview">
+            <span class="tier-chip bronze">🥉 Bronze</span>
+            <span class="tier-chip silver">🥈 Silver</span>
+            <span class="tier-chip gold">🥇 Gold</span>
+            <span class="tier-chip hero">👑 Hero</span>
+        </div>
+    </div>
 
     <a class="admin-link" href="/admin">Admin</a>
     <script>

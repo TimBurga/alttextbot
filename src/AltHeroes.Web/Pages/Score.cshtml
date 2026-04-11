@@ -415,18 +415,17 @@
         .day-cell.inactive { opacity: 0.18; }
         .day-cell.empty {}
 
-        /* 1. Scanning pulse — DEBUG: bright red, large outline */
+        /* Scanning pulse — accent ring on the day currently being processed */
         .day-cell.scanning {
             z-index: 2;
-            outline: 4px solid red !important;
+            outline: 2px solid var(--accent);
             outline-offset: 2px;
-            background: rgba(255,0,0,0.2) !important;
-            animation: scanPulse 0.6s ease-in-out infinite;
+            animation: scanPulse 0.7s ease-in-out infinite;
         }
 
         @@keyframes scanPulse {
-            0%, 100% { outline-color: red; background: rgba(255,0,0,0.15) !important; }
-            50%       { outline-color: #ff6600; background: rgba(255,0,0,0.35) !important; }
+            0%, 100% { outline-color: var(--accent); }
+            50%       { outline-color: var(--hero); }
         }
 
         /* 2. Golden glow for fully-captioned days */
@@ -744,7 +743,7 @@ else if (Model.Did is not null)
         const source = new EventSource('/stream/' + encodeURIComponent(DID));
         let prevMonthVisible = false;
         let imageCount = 0;
-        let scanningCell = null; // 1. tracks currently highlighted cell
+        let scanningCell = null;
 
         source.addEventListener('image', e => {
             const { date } = JSON.parse(e.data);
@@ -759,7 +758,6 @@ else if (Model.Did is not null)
             const cell = document.querySelector(`[data-date="${date}"]`);
             if (!cell) return;
 
-            // 1. Move scanning highlight to this cell
             if (scanningCell !== cell) {
                 scanningCell?.classList.remove('scanning');
                 cell.classList.add('scanning');
@@ -784,22 +782,26 @@ else if (Model.Did is not null)
             const cell = document.querySelector(`[data-date="${date}"]`);
             if (!cell) return;
 
+            // Ensure scanning ring is visible even for days that had no image posts
+            // (those days never received an 'image' event to add the class)
+            if (scanningCell !== cell) {
+                scanningCell?.classList.remove('scanning');
+                cell.classList.add('scanning');
+                scanningCell = cell;
+            }
+
             if (allCompliant) {
-                // 2. Persistent golden glow for fully-captioned days
                 cell.classList.add('starred');
                 cell.querySelector('.star')?.classList.add('show');
             }
 
-            // 1. Keep the scanning ring visible for a minimum dwell time so
-            //    every processed day is perceptible, even single-image days
-            //    where day_complete would otherwise fire before the next frame.
+            // Keep the ring visible briefly so every processed day is perceptible
             setTimeout(() => {
                 cell.classList.remove('scanning');
                 if (scanningCell === cell) scanningCell = null;
             }, 500);
         });
 
-        // 3. Pre-reveal tension: accelerate pulse, ghost the result card
         source.addEventListener('calculating', () => {
             document.getElementById('pulse-dot')?.classList.add('fast');
             document.getElementById('status-text').textContent = 'Calculating result…';

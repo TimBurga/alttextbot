@@ -784,15 +784,19 @@ else if (Model.Did is not null)
             const cell = document.querySelector(`[data-date="${date}"]`);
             if (!cell) return;
 
-            // 1. Remove scanning ring from completed day
-            cell.classList.remove('scanning');
-            if (scanningCell === cell) scanningCell = null;
-
             if (allCompliant) {
                 // 2. Persistent golden glow for fully-captioned days
                 cell.classList.add('starred');
                 cell.querySelector('.star')?.classList.add('show');
             }
+
+            // 1. Keep the scanning ring visible for a minimum dwell time so
+            //    every processed day is perceptible, even single-image days
+            //    where day_complete would otherwise fire before the next frame.
+            setTimeout(() => {
+                cell.classList.remove('scanning');
+                if (scanningCell === cell) scanningCell = null;
+            }, 500);
         });
 
         // 3. Pre-reveal tension: accelerate pulse, ghost the result card

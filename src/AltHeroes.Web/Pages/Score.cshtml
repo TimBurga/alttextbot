@@ -415,22 +415,18 @@
         .day-cell.inactive { opacity: 0.18; }
         .day-cell.empty {}
 
-        /* 1. Scanning pulse — pulsing ring + background so it's clearly visible */
+        /* 1. Scanning pulse — DEBUG: bright red, large outline */
         .day-cell.scanning {
-            border-color: var(--accent) !important;
-            animation: scanPulse 0.7s ease-in-out infinite;
-            z-index: 2; /* render above adjacent cells so the ring isn't buried */
+            z-index: 2;
+            outline: 4px solid red !important;
+            outline-offset: 2px;
+            background: rgba(255,0,0,0.2) !important;
+            animation: scanPulse 0.6s ease-in-out infinite;
         }
 
         @@keyframes scanPulse {
-            0%, 100% {
-                background: rgba(99,102,241,0.18);
-                box-shadow: 0 0 0 2px rgba(99,102,241,0.55), inset 0 0 8px rgba(99,102,241,0.3);
-            }
-            50% {
-                background: rgba(99,102,241,0.34);
-                box-shadow: 0 0 0 3px rgba(99,102,241,0.9), inset 0 0 14px rgba(99,102,241,0.5);
-            }
+            0%, 100% { outline-color: red; background: rgba(255,0,0,0.15) !important; }
+            50%       { outline-color: #ff6600; background: rgba(255,0,0,0.35) !important; }
         }
 
         /* 2. Golden glow for fully-captioned days */

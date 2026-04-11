@@ -86,7 +86,7 @@ public sealed class ScoringStreamService(
                 }
 
                 var postDate = DateOnly.FromDateTime(createdAt.UtcDateTime);
-                var post = ParsePost($"at://{did}/app.bsky.feed.post/{rec.Rkey}", createdAt, rec.Value);
+                var post = ParsePost(rec.Uri, createdAt, rec.Value);
 
                 // Day boundary: emit day_complete for the day we just finished
                 if (currentDate is not null && postDate != currentDate)
@@ -250,7 +250,7 @@ public sealed class ScoringStreamService(
         }).ToList();
 
     private record ListRecordsResponse(List<RecordItem>? Records, string? Cursor);
-    private record RecordItem(string Rkey, JsonElement Value);
+    private record RecordItem(string Uri, JsonElement Value);
 }
 
 public abstract record ScoringEvent;

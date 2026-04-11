@@ -257,7 +257,7 @@ public sealed class ScoringStreamService(
                 .Select(img =>
                 {
                     var thumbUrl = img.BlobCid is not null
-                        ? $"https://cdn.bsky.app/img/feed_thumbnail/plain/{Uri.EscapeDataString(did)}/{img.BlobCid}@jpeg"
+                        ? $"https://cdn.bsky.app/img/feed_thumbnail/plain/{did}/{img.BlobCid}@jpeg"
                         : null;
                     return new ImageInfo(img.AltText, img.AltText?.Length >= minLength, thumbUrl);
                 })

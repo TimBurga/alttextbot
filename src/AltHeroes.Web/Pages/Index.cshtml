@@ -172,12 +172,14 @@
         .tier-chip {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.25rem;
             padding: 0.3rem 0.7rem;
             border-radius: 9999px;
             font-size: 0.78rem;
             font-weight: 600;
             border: 1px solid;
+            min-width: 8rem;
         }
 
         .tier-chip.bronze { color: #cd7f32; border-color: rgba(205,127,50,0.35);  background: rgba(205,127,50,0.08);  }
@@ -236,10 +238,10 @@
         </form>
 
         <div class="tier-preview">
-            <span class="tier-chip bronze">🥉 Bronze</span>
-            <span class="tier-chip silver">🥈 Silver</span>
-            <span class="tier-chip gold">🥇 Gold</span>
-            <span class="tier-chip hero">👑 Hero</span>
+            <span class="tier-chip bronze">🥉 Bronze · ≥60%</span>
+            <span class="tier-chip silver">🥈 Silver · ≥75%</span>
+            <span class="tier-chip gold">🥇 Gold · ≥85%</span>
+            <span class="tier-chip hero">👑 Hero · ≥95%</span>
         </div>
     </div>
 

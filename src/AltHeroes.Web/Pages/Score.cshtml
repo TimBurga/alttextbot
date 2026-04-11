@@ -354,7 +354,6 @@
         @@media (max-width: 620px) {
             #calendars { flex-direction: column; align-items: stretch; }
             .month-card { max-width: none; width: 100%; }
-            #curr-month { order: -1; }
 
             #prev-month {
                 max-width: none;
@@ -416,15 +415,21 @@
         .day-cell.inactive { opacity: 0.18; }
         .day-cell.empty {}
 
-        /* 1. Scanning pulse — background animation stays inside cell bounds */
+        /* 1. Scanning pulse — pulsing ring + background so it's clearly visible */
         .day-cell.scanning {
             border-color: var(--accent) !important;
-            animation: scanPulse 0.85s ease-in-out infinite;
+            animation: scanPulse 0.7s ease-in-out infinite;
         }
 
         @@keyframes scanPulse {
-            0%, 100% { background: rgba(99,102,241,0.10); box-shadow: inset 0 0 8px rgba(99,102,241,0.3); }
-            50%       { background: rgba(99,102,241,0.22); box-shadow: inset 0 0 16px rgba(99,102,241,0.5); }
+            0%, 100% {
+                background: rgba(99,102,241,0.18);
+                box-shadow: 0 0 0 2px rgba(99,102,241,0.55), inset 0 0 8px rgba(99,102,241,0.3);
+            }
+            50% {
+                background: rgba(99,102,241,0.34);
+                box-shadow: 0 0 0 3px rgba(99,102,241,0.9), inset 0 0 14px rgba(99,102,241,0.5);
+            }
         }
 
         /* 2. Golden glow for fully-captioned days */
@@ -902,21 +907,20 @@ else if (Model.Did is not null)
 
             // ── Stage 3: Tier name stamps in (T+1050ms) ──────────────────
             setTimeout(() => {
+                tierEl.style.opacity = '1';
+                void tierEl.offsetWidth;
+                tierEl.classList.add('stamp');
                 if (data.tier === 'Hero') {
-                    stampHeroSlot(tierEl, color);
+                    heroFlash();
+                    setTimeout(() => heroJackpot(card, color), 60);
                 } else {
-                    tierEl.style.opacity = '1';
-                    void tierEl.offsetWidth;
-                    tierEl.classList.add('stamp');
-                    // Sparks for medal tiers
                     const n = { Bronze: 10, Silver: 14, Gold: 20 }[data.tier];
                     if (n) launchSparks(card, color, n);
                 }
             }, 1050);
 
             // ── Stage 4: Medals drop in ───────────────────────────────────
-            // Hero medals wait until after the slot machine lands (~2400ms)
-            const medalDelay = data.tier === 'Hero' ? 2500 : 1480;
+            const medalDelay = 1480;
             if (medalL) {
                 setTimeout(() => {
                     document.getElementById('medal-left').classList.add('drop');
@@ -944,33 +948,6 @@ else if (Model.Did is not null)
                 if (p < 1) requestAnimationFrame(tick);
                 else el.textContent = target.toFixed(1) + '%';
             })(t0);
-        }
-
-        // Hero-only: slot machine spins through tiers then SLAMS onto Hero
-        function stampHeroSlot(tierEl, color) {
-            const names = ['Bronze', 'Silver', 'Gold', 'Hero'];
-            let idx = 0, interval = 70;
-            tierEl.style.opacity = '1';
-
-            function tick() {
-                tierEl.textContent = names[idx % names.length];
-                tierEl.style.color = TIER_COLORS[names[idx % names.length]];
-                idx++;
-                interval = Math.min(interval * 1.2, 480);
-                if (interval >= 460) {
-                    setTimeout(() => {
-                        tierEl.textContent = 'Hero';
-                        tierEl.style.color = color;
-                        tierEl.classList.add('stamp');
-                        heroFlash();
-                        setTimeout(() => heroJackpot(
-                            document.getElementById('hero-display'), color), 60);
-                    }, interval);
-                } else {
-                    setTimeout(tick, interval);
-                }
-            }
-            tick();
         }
 
         // Full-screen white flash for the jackpot moment

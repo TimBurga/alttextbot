@@ -562,6 +562,147 @@
             background: rgba(99,102,241,0.07);
         }
 
+        /* ── Clickable day cells ─────────────────────────── */
+        .day-cell.has-posts {
+            cursor: pointer;
+        }
+
+        .day-cell.has-posts:hover {
+            border-color: rgba(99,102,241,0.55) !important;
+            background: var(--surface2) !important;
+        }
+
+        .day-cell.selected {
+            outline: 2px solid var(--accent) !important;
+            outline-offset: 1px;
+            animation: none !important;
+        }
+
+        /* ── Day-detail panel ────────────────────────────── */
+        #post-panel {
+            margin-top: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            overflow: hidden;
+            animation: panelSlide 0.2s ease-out;
+        }
+
+        @@keyframes panelSlide {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .post-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .post-panel-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0.2rem 0.4rem;
+            border-radius: 5px;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .post-panel-close:hover { color: var(--text); background: var(--surface2); }
+
+        .post-cards {
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+
+        .post-card {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            padding: 0.7rem 0.9rem;
+            border-radius: 9px;
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--border);
+            background: var(--bg);
+            text-decoration: none;
+            color: var(--text);
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .post-card:hover { background: var(--surface2); }
+        .post-card.compliant     { border-left-color: #22c55e; }
+        .post-card.non-compliant { border-left-color: #ef4444; }
+
+        .post-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .post-card-left {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .post-card-ok     { color: #22c55e; }
+        .post-card-bad    { color: #ef4444; }
+        .post-card-count  { color: var(--muted); font-weight: 500; }
+
+        .post-card-link {
+            font-size: 0.78rem;
+            color: var(--accent);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .post-images-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .post-image-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.35rem;
+            font-size: 0.8rem;
+        }
+
+        .img-ok  { color: #22c55e; flex-shrink: 0; }
+        .img-bad { color: #ef4444; flex-shrink: 0; }
+
+        .img-alt-text {
+            color: var(--muted);
+            font-style: italic;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .img-alt-text.no-alt {
+            font-style: normal;
+            color: #ef4444;
+            opacity: 0.75;
+        }
+
+        [data-theme="light"] .post-card { background: #f8f9fc; }
+        [data-theme="light"] .post-card:hover { background: var(--surface2); }
+
         /* ── Responsive tweaks ───────────────────────────── */
         @@media (max-width: 480px) {
             main { padding: 1.25rem 1rem; }
@@ -684,6 +825,15 @@ else if (Model.Did is not null)
         </div>
     </div>
 
+    <!-- Day-detail panel (shown when a day cell with posts is clicked) -->
+    <div id="post-panel" hidden>
+        <div class="post-panel-header">
+            <span id="post-panel-date"></span>
+            <button class="post-panel-close" id="post-panel-close" aria-label="Close">&#x2715;</button>
+        </div>
+        <div class="post-cards" id="post-cards"></div>
+    </div>
+
     <script>
     (() => {
         const DID = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Did));
@@ -744,6 +894,7 @@ else if (Model.Did is not null)
         let prevMonthVisible = false;
         let imageCount = 0;
         let scanningCell = null;
+        const dayPostsMap = new Map(); // date string → posts array from day_complete
 
         source.addEventListener('image', e => {
             const { date } = JSON.parse(e.data);
@@ -778,9 +929,22 @@ else if (Model.Did is not null)
         });
 
         source.addEventListener('day_complete', e => {
-            const { date, allCompliant } = JSON.parse(e.data);
+            const { date, allCompliant, posts } = JSON.parse(e.data);
             const cell = document.querySelector(`[data-date="${date}"]`);
             if (!cell) return;
+
+            // Reveal the previous-month card when we first encounter a date in it
+            // (needed for users with no image posts in that month — image handler won't fire)
+            if (!prevMonthVisible && date.startsWith(`${prevYear}-${pad(prevMonth + 1)}`)) {
+                document.getElementById('prev-month').classList.add('visible');
+                prevMonthVisible = true;
+            }
+
+            // Store posts and mark clickable cells
+            dayPostsMap.set(date, posts ?? []);
+            if (posts && posts.length > 0) {
+                cell.classList.add('has-posts');
+            }
 
             // Ensure scanning ring is visible even for days that had no image posts
             // (those days never received an 'image' event to add the class)
@@ -995,6 +1159,89 @@ else if (Model.Did is not null)
                 spark.addEventListener('animationend', () => spark.remove());
             }
         }
+        // ── Day-detail panel ──────────────────────────────────────────────
+        document.getElementById('calendars').addEventListener('click', e => {
+            const cell = e.target.closest('.day-cell.has-posts');
+            if (!cell || !cell.dataset.date) return;
+            const date = cell.dataset.date;
+
+            // Toggle: clicking the selected cell closes the panel
+            if (cell.classList.contains('selected')) {
+                cell.classList.remove('selected');
+                document.getElementById('post-panel').hidden = true;
+                return;
+            }
+
+            document.querySelector('.day-cell.selected')?.classList.remove('selected');
+            cell.classList.add('selected');
+            showPostPanel(date);
+        });
+
+        document.getElementById('post-panel-close').addEventListener('click', () => {
+            document.getElementById('post-panel').hidden = true;
+            document.querySelector('.day-cell.selected')?.classList.remove('selected');
+        });
+
+        function showPostPanel(date) {
+            const posts = dayPostsMap.get(date) ?? [];
+            document.getElementById('post-panel-date').textContent = formatPanelDate(date);
+
+            document.getElementById('post-cards').innerHTML = posts.map(post => {
+                const url = atUriToUrl(post.atUri);
+                const compliantClass = post.isCompliant ? 'compliant' : 'non-compliant';
+                const icon = post.isCompliant
+                    ? '<span class="post-card-ok">✓</span>'
+                    : '<span class="post-card-bad">✗</span>';
+                const count = post.images.length;
+
+                const rows = post.images.map(img => {
+                    const hasAlt = img.altText && img.altText.trim().length > 0;
+                    const statusIcon = img.isCompliant
+                        ? '<span class="img-ok">✓</span>'
+                        : '<span class="img-bad">✗</span>';
+                    const altHtml = hasAlt
+                        ? `<span class="img-alt-text">${escapeHtml(img.altText)}</span>`
+                        : `<span class="img-alt-text no-alt">No alt text</span>`;
+                    return `<div class="post-image-row">${statusIcon}${altHtml}</div>`;
+                }).join('');
+
+                return `<a class="post-card ${compliantClass}" href="${url}" target="_blank" rel="noopener noreferrer">
+                    <div class="post-card-top">
+                        <div class="post-card-left">
+                            ${icon}
+                            <span class="post-card-count">${count} image${count !== 1 ? 's' : ''}</span>
+                        </div>
+                        <span class="post-card-link">View on Bluesky ↗</span>
+                    </div>
+                    <div class="post-images-list">${rows}</div>
+                </a>`;
+            }).join('');
+
+            const panel = document.getElementById('post-panel');
+            panel.hidden = false;
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function atUriToUrl(atUri) {
+            // at://did/app.bsky.feed.post/rkey → https://bsky.app/profile/did/post/rkey
+            const parts = atUri.split('/');
+            return `https://bsky.app/profile/${parts[2]}/post/${parts[4]}`;
+        }
+
+        function formatPanelDate(dateStr) {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(undefined, {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+            });
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
         function toggleTheme() {
             var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', t);

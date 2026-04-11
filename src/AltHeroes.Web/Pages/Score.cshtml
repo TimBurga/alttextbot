@@ -650,18 +650,6 @@
             gap: 0.5rem;
         }
 
-        .post-card-left {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.82rem;
-            font-weight: 600;
-        }
-
-        .post-card-ok     { color: #22c55e; }
-        .post-card-bad    { color: #ef4444; }
-        .post-card-count  { color: var(--muted); font-weight: 500; }
-
         .post-card-link {
             font-size: 0.78rem;
             color: var(--accent);
@@ -681,9 +669,6 @@
             gap: 0.5rem;
             font-size: 0.8rem;
         }
-
-        .img-ok  { color: #22c55e; flex-shrink: 0; }
-        .img-bad { color: #ef4444; flex-shrink: 0; }
 
         .img-alt-text {
             color: var(--muted);
@@ -1210,16 +1195,9 @@ else if (Model.Did is not null)
             document.getElementById('post-cards').innerHTML = posts.map(post => {
                 const url = atUriToUrl(post.atUri);
                 const compliantClass = post.isCompliant ? 'compliant' : 'non-compliant';
-                const icon = post.isCompliant
-                    ? '<span class="post-card-ok">✓</span>'
-                    : '<span class="post-card-bad">✗</span>';
-                const count = post.images.length;
 
                 const rows = post.images.map(img => {
                     const hasAlt = img.altText && img.altText.trim().length > 0;
-                    const statusIcon = img.isCompliant
-                        ? '<span class="img-ok">✓</span>'
-                        : '<span class="img-bad">✗</span>';
                     const altHtml = hasAlt
                         ? `<span class="img-alt-text">${escapeHtml(img.altText)}</span>`
                         : `<span class="img-alt-text no-alt">No alt text</span>`;
@@ -1228,16 +1206,12 @@ else if (Model.Did is not null)
                         : '';
                     return `<div class="post-image-row">
                         ${thumbHtml}
-                        <div class="img-text-col">${statusIcon}${altHtml}</div>
+                        <div class="img-text-col">${altHtml}</div>
                     </div>`;
                 }).join('');
 
                 return `<a class="post-card ${compliantClass}" href="${url}" target="_blank" rel="noopener noreferrer">
                     <div class="post-card-top">
-                        <div class="post-card-left">
-                            ${icon}
-                            <span class="post-card-count">${count} image${count !== 1 ? 's' : ''}</span>
-                        </div>
                         <span class="post-card-link">View on Bluesky ↗</span>
                     </div>
                     <div class="post-images-list">${rows}</div>

@@ -130,7 +130,7 @@ app.MapGet("/stream/{did}", async (string did, ScoringStreamService scorer, Http
                 {
                     atUri = p.AtUri,
                     isCompliant = p.IsCompliant,
-                    images = p.Images.Select(img => new { altText = img.AltText, isCompliant = img.IsCompliant })
+                    images = p.Images.Select(img => new { altText = img.AltText, isCompliant = img.IsCompliant, thumbUrl = img.ThumbUrl })
                 })
             }, sseJsonOpts);
             line = $"event: day_complete\ndata: {payload}\n\n";

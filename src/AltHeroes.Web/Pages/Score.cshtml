@@ -509,7 +509,7 @@
         .count-wrap {
             position: relative;
             z-index: 1;
-            font-size: 1.35rem;
+            font-size: 1.6rem;
             font-weight: 800;
             color: #fff;
             min-height: 1.2em;
@@ -677,8 +677,8 @@
 
         .post-image-row {
             display: flex;
-            align-items: flex-start;
-            gap: 0.35rem;
+            align-items: center;
+            gap: 0.5rem;
             font-size: 0.8rem;
         }
 
@@ -700,6 +700,22 @@
             opacity: 0.75;
         }
 
+        .post-image-thumb {
+            width: 72px;
+            height: 72px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
+            background: var(--surface2);
+        }
+
+        .img-text-col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            min-width: 0;
+        }
+
         [data-theme="light"] .post-card { background: #f8f9fc; }
         [data-theme="light"] .post-card:hover { background: var(--surface2); }
 
@@ -711,7 +727,7 @@
             .tier-medal { font-size: 3rem; }
             .hero-score { font-size: 1.25rem; }
             .star { font-size: 20px; }
-            .count-wrap { font-size: 1.1rem; }
+            .count-wrap { font-size: 1.3rem; }
             .day-num { font-size: 8px; }
         }
 
@@ -1202,7 +1218,13 @@ else if (Model.Did is not null)
                     const altHtml = hasAlt
                         ? `<span class="img-alt-text">${escapeHtml(img.altText)}</span>`
                         : `<span class="img-alt-text no-alt">No alt text</span>`;
-                    return `<div class="post-image-row">${statusIcon}${altHtml}</div>`;
+                    const thumbHtml = img.thumbUrl
+                        ? `<img class="post-image-thumb" src="${img.thumbUrl}" alt="" loading="lazy">`
+                        : '';
+                    return `<div class="post-image-row">
+                        ${thumbHtml}
+                        <div class="img-text-col">${statusIcon}${altHtml}</div>
+                    </div>`;
                 }).join('');
 
                 return `<a class="post-card ${compliantClass}" href="${url}" target="_blank" rel="noopener noreferrer">

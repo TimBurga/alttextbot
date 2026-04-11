@@ -93,7 +93,7 @@ public sealed class ScoringStreamService(
                 {
                     var allCompliant = dayPosts.Count > 0 &&
                         dayPosts.All(p => p.Images.All(img => img.AltText?.Length >= config.AltTextMinimumLength));
-                    var postInfos = BuildPostInfos(dayPosts, config.AltTextMinimumLength);
+                    var postInfos = BuildPostInfos(dayPosts, config.AltTextMinimumLength, did);
                     yield return new DayCompleteEvent(currentDate.Value.ToString("yyyy-MM-dd"), allCompliant, postInfos);
                     // Brief pause so the star pop feels weighted before moving to the next day
                     await Task.Delay(180, ct);
@@ -144,7 +144,7 @@ public sealed class ScoringStreamService(
         {
             var allCompliant = dayPosts.Count > 0 &&
                 dayPosts.All(p => p.Images.All(img => img.AltText?.Length >= config.AltTextMinimumLength));
-            var lastPostInfos = BuildPostInfos(dayPosts, config.AltTextMinimumLength);
+            var lastPostInfos = BuildPostInfos(dayPosts, config.AltTextMinimumLength, did);
             yield return new DayCompleteEvent(currentDate.Value.ToString("yyyy-MM-dd"), allCompliant, lastPostInfos);
             await Task.Delay(180, ct);
 
@@ -200,7 +200,17 @@ public sealed class ScoringStreamService(
         if (type == "app.bsky.embed.images" && embed.TryGetProperty("images", out var imgs))
         {
             foreach (var img in imgs.EnumerateArray())
-                images.Add(new ImageRecord(img.TryGetProperty("alt", out var alt) ? alt.GetString() : null));
+            {
+                var altText = img.TryGetProperty("alt", out var alt) ? alt.GetString() : null;
+                string? blobCid = null;
+                if (img.TryGetProperty("image", out var blob) &&
+                    blob.TryGetProperty("ref", out var blobRef) &&
+                    blobRef.TryGetProperty("$link", out var link))
+                {
+                    blobCid = link.GetString();
+                }
+                images.Add(new ImageRecord(altText, blobCid));
+            }
         }
         else if (type == "app.bsky.embed.recordWithMedia" && embed.TryGetProperty("media", out var media))
         {
@@ -240,11 +250,17 @@ public sealed class ScoringStreamService(
         throw new InvalidOperationException($"No #atproto_pds service found in DID document for {did}.");
     }
 
-    private static List<PostInfo> BuildPostInfos(List<PostRecord> posts, int minLength) =>
+    private static List<PostInfo> BuildPostInfos(List<PostRecord> posts, int minLength, string did) =>
         posts.Select(p =>
         {
             var imgs = p.Images
-                .Select(img => new ImageInfo(img.AltText, img.AltText?.Length >= minLength))
+                .Select(img =>
+                {
+                    var thumbUrl = img.BlobCid is not null
+                        ? $"https://cdn.bsky.app/img/feed_thumbnail/plain/{Uri.EscapeDataString(did)}/{img.BlobCid}@jpeg"
+                        : null;
+                    return new ImageInfo(img.AltText, img.AltText?.Length >= minLength, thumbUrl);
+                })
                 .ToList();
             return new PostInfo(p.AtUri, imgs.Count > 0 && imgs.All(i => i.IsCompliant), imgs);
         }).ToList();
@@ -255,7 +271,7 @@ public sealed class ScoringStreamService(
 
 public abstract record ScoringEvent;
 public record ImageEvent(string Date) : ScoringEvent;
-public record ImageInfo(string? AltText, bool IsCompliant);
+public record ImageInfo(string? AltText, bool IsCompliant, string? ThumbUrl);
 public record PostInfo(string AtUri, bool IsCompliant, List<ImageInfo> Images);
 public record DayCompleteEvent(string Date, bool AllCompliant, List<PostInfo> Posts) : ScoringEvent;
 public record CalculatingEvent : ScoringEvent;

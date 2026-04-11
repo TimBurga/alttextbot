@@ -108,6 +108,8 @@ app.MapPost("/admin/api/rescore/{did}", async (string did, BotAdminClient bot, H
 }).RequireAuthorization();
 
 // ── Public SSE scoring stream ─────────────────────────────────────────────────
+var sseJsonOpts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+
 app.MapGet("/stream/{did}", async (string did, ScoringStreamService scorer, HttpContext ctx, CancellationToken ct) =>
 {
     ctx.Response.ContentType = "text/event-stream";
@@ -116,18 +118,36 @@ app.MapGet("/stream/{did}", async (string did, ScoringStreamService scorer, Http
 
     await foreach (var evt in scorer.StreamAsync(did, ct))
     {
-        var line = evt switch
+        string line;
+        if (evt is DayCompleteEvent dc)
         {
-            ImageEvent e =>
-                $"event: image\ndata: {{\"date\":\"{e.Date}\"}}\n\n",
-            DayCompleteEvent e =>
-                $"event: day_complete\ndata: {{\"date\":\"{e.Date}\",\"allCompliant\":{(e.AllCompliant ? "true" : "false")}}}\n\n",
-            CalculatingEvent =>
-                "event: calculating\ndata: {}\n\n",
-            DoneEvent e =>
-                $"event: done\ndata: {{\"tier\":\"{e.Tier}\",\"score\":{e.Score:F1},\"totalImagePosts\":{e.TotalImagePosts},\"compliantPosts\":{e.CompliantPosts}}}\n\n",
-            _ => ""
-        };
+            // Use JsonSerializer so the posts array is properly escaped
+            var payload = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                date = dc.Date,
+                allCompliant = dc.AllCompliant,
+                posts = dc.Posts.Select(p => new
+                {
+                    atUri = p.AtUri,
+                    isCompliant = p.IsCompliant,
+                    images = p.Images.Select(img => new { altText = img.AltText, isCompliant = img.IsCompliant })
+                })
+            }, sseJsonOpts);
+            line = $"event: day_complete\ndata: {payload}\n\n";
+        }
+        else
+        {
+            line = evt switch
+            {
+                ImageEvent e =>
+                    $"event: image\ndata: {{\"date\":\"{e.Date}\"}}\n\n",
+                CalculatingEvent =>
+                    "event: calculating\ndata: {}\n\n",
+                DoneEvent e =>
+                    $"event: done\ndata: {{\"tier\":\"{e.Tier}\",\"score\":{e.Score:F1},\"totalImagePosts\":{e.TotalImagePosts},\"compliantPosts\":{e.CompliantPosts}}}\n\n",
+                _ => ""
+            };
+        }
 
         if (line.Length == 0) continue;
         await ctx.Response.WriteAsync(line, ct);

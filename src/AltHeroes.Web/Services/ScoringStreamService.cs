@@ -24,6 +24,8 @@ public sealed class ScoringStreamService(
     {
         var config = options.Value.ToConfig();
         var cutoff = DateTimeOffset.UtcNow.AddDays(-config.WindowDays);
+        var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime);
+        var cutoffDate = DateOnly.FromDateTime(cutoff.UtcDateTime);
         var http = httpClientFactory.CreateClient(nameof(ScoringStreamService));
 
         // listRecords is a PDS-level API; resolve the user's PDS from their DID document first.
@@ -91,10 +93,27 @@ public sealed class ScoringStreamService(
                 {
                     var allCompliant = dayPosts.Count > 0 &&
                         dayPosts.All(p => p.Images.All(img => img.AltText?.Length >= config.AltTextMinimumLength));
-                    yield return new DayCompleteEvent(currentDate.Value.ToString("yyyy-MM-dd"), allCompliant);
+                    var postInfos = BuildPostInfos(dayPosts, config.AltTextMinimumLength);
+                    yield return new DayCompleteEvent(currentDate.Value.ToString("yyyy-MM-dd"), allCompliant, postInfos);
                     // Brief pause so the star pop feels weighted before moving to the next day
                     await Task.Delay(180, ct);
                     dayPosts.Clear();
+
+                    // Fill empty days between the day just completed and the new post date
+                    for (var d = currentDate.Value.AddDays(-1); d > postDate; d = d.AddDays(-1))
+                    {
+                        yield return new DayCompleteEvent(d.ToString("yyyy-MM-dd"), false, []);
+                        await Task.Delay(40, ct);
+                    }
+                }
+                else if (currentDate is null)
+                {
+                    // First post seen: fill gap from today down to this post's date
+                    for (var d = today; d > postDate; d = d.AddDays(-1))
+                    {
+                        yield return new DayCompleteEvent(d.ToString("yyyy-MM-dd"), false, []);
+                        await Task.Delay(40, ct);
+                    }
                 }
 
                 currentDate = postDate;
@@ -120,12 +139,30 @@ public sealed class ScoringStreamService(
             cursor = page.Cursor;
         }
 
-        // Emit day_complete for the last day
-        if (currentDate is not null && dayPosts.Count > 0)
+        // Emit day_complete for the last day (even if it had no image posts)
+        if (currentDate is not null)
         {
-            var allCompliant = dayPosts.All(p => p.Images.All(img => img.AltText?.Length >= config.AltTextMinimumLength));
-            yield return new DayCompleteEvent(currentDate.Value.ToString("yyyy-MM-dd"), allCompliant);
+            var allCompliant = dayPosts.Count > 0 &&
+                dayPosts.All(p => p.Images.All(img => img.AltText?.Length >= config.AltTextMinimumLength));
+            var lastPostInfos = BuildPostInfos(dayPosts, config.AltTextMinimumLength);
+            yield return new DayCompleteEvent(currentDate.Value.ToString("yyyy-MM-dd"), allCompliant, lastPostInfos);
             await Task.Delay(180, ct);
+
+            // Fill tail: empty days from (lastDate - 1) down to the cutoff date
+            for (var d = currentDate.Value.AddDays(-1); d >= cutoffDate; d = d.AddDays(-1))
+            {
+                yield return new DayCompleteEvent(d.ToString("yyyy-MM-dd"), false, []);
+                await Task.Delay(40, ct);
+            }
+        }
+        else
+        {
+            // No posts found in window at all — mark every day as empty
+            for (var d = today; d >= cutoffDate; d = d.AddDays(-1))
+            {
+                yield return new DayCompleteEvent(d.ToString("yyyy-MM-dd"), false, []);
+                await Task.Delay(40, ct);
+            }
         }
 
         // Signal that we're about to calculate — lets the client show a building state
@@ -203,12 +240,23 @@ public sealed class ScoringStreamService(
         throw new InvalidOperationException($"No #atproto_pds service found in DID document for {did}.");
     }
 
+    private static List<PostInfo> BuildPostInfos(List<PostRecord> posts, int minLength) =>
+        posts.Select(p =>
+        {
+            var imgs = p.Images
+                .Select(img => new ImageInfo(img.AltText, img.AltText?.Length >= minLength))
+                .ToList();
+            return new PostInfo(p.AtUri, imgs.Count > 0 && imgs.All(i => i.IsCompliant), imgs);
+        }).ToList();
+
     private record ListRecordsResponse(List<RecordItem>? Records, string? Cursor);
     private record RecordItem(string Rkey, JsonElement Value);
 }
 
 public abstract record ScoringEvent;
 public record ImageEvent(string Date) : ScoringEvent;
-public record DayCompleteEvent(string Date, bool AllCompliant) : ScoringEvent;
+public record ImageInfo(string? AltText, bool IsCompliant);
+public record PostInfo(string AtUri, bool IsCompliant, List<ImageInfo> Images);
+public record DayCompleteEvent(string Date, bool AllCompliant, List<PostInfo> Posts) : ScoringEvent;
 public record CalculatingEvent : ScoringEvent;
 public record DoneEvent(string Tier, double Score, int TotalImagePosts, int CompliantPosts) : ScoringEvent;

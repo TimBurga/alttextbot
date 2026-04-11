@@ -1,7 +1,7 @@
 namespace AltHeroes.Core;
 
 /// <summary>An image within a post, with its alt text (null if absent).</summary>
-public record ImageRecord(string? AltText);
+public record ImageRecord(string? AltText, string? BlobCid = null);
 
 /// <summary>
 /// A post fetched from listRecords. Text-only posts (no images) are

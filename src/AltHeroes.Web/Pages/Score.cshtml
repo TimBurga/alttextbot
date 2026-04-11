@@ -1127,10 +1127,15 @@ else if (Model.Did is not null)
             (function tick(now) {
                 const p = Math.min((now - t0) / duration, 1);
                 const eased = 1 - Math.pow(1 - p, 3);
-                el.textContent = (eased * target).toFixed(1) + '%';
+                el.textContent = fmtScore(eased * target);
                 if (p < 1) requestAnimationFrame(tick);
-                else el.textContent = target.toFixed(1) + '%';
+                else el.textContent = fmtScore(target);
             })(t0);
+        }
+
+        function fmtScore(v) {
+            // Omit the decimal when the value rounds to 100
+            return (v >= 99.95 ? '100' : v.toFixed(1)) + '%';
         }
 
         // Full-screen white flash for the jackpot moment

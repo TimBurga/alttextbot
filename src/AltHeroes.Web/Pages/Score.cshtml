@@ -419,6 +419,7 @@
         .day-cell.scanning {
             border-color: var(--accent) !important;
             animation: scanPulse 0.7s ease-in-out infinite;
+            z-index: 2; /* render above adjacent cells so the ring isn't buried */
         }
 
         @@keyframes scanPulse {

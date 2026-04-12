@@ -762,6 +762,87 @@
 
         .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
+        /* ── Action row (share + next-tier nudge) ────────────────────── */
+        #action-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.65rem;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+
+        #action-row.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .share-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.6rem 1.4rem;
+            border-radius: 99px;
+            background: linear-gradient(135deg, var(--accent), var(--hero));
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.88rem;
+            text-decoration: none;
+            font-family: inherit;
+            box-shadow: 0 4px 15px rgba(99,102,241,0.28);
+            transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+            white-space: nowrap;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(99,102,241,0.45);
+            opacity: 0.92;
+        }
+
+        .share-btn:active { transform: translateY(0); }
+
+        .next-tier-nudge {
+            font-size: 0.82rem;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .next-tier-nudge strong { color: var(--text); }
+
+        .tier-progress {
+            width: 100%;
+            max-width: 280px;
+            height: 5px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .tier-progress-fill {
+            height: 100%;
+            border-radius: 99px;
+            width: 0;
+            transition: width 1.2s cubic-bezier(0.22, 0.61, 0.36, 1) 0.1s;
+        }
+
+        /* ── Reduced motion ──────────────────────────────────────────── */
+        @@media (prefers-reduced-motion: reduce) {
+            .tier-medal, .hero-tier-name, #hero-display,
+            .day-cell, .star, .count-wrap, .pulse-dot,
+            #prev-month, #post-panel, #action-row {
+                animation: none !important;
+                transition: none !important;
+            }
+            #hero-display.revealed   { opacity: 1;  transform: none; }
+            .tier-medal.drop         { opacity: 1;  transform: translateY(0) scale(1); }
+            .hero-tier-name.stamp    { opacity: 1;  transform: scale(1); }
+            #action-row              { opacity: 1;  transform: none; }
+        }
+
     </style>
     <script src="/js/shared.js" defer></script>
 </head>
@@ -815,6 +896,18 @@ else if (Model.Did is not null)
         </div>
         <div class="hero-score" id="hero-score"></div>
         <div class="hero-detail" id="hero-detail"></div>
+    </div>
+
+    <!-- Action row: share + next-tier nudge (revealed after score) -->
+    <div id="action-row" hidden>
+        <a id="share-btn" class="share-btn" href="#" target="_blank" rel="noopener noreferrer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            Share on Bluesky
+        </a>
+        <p class="next-tier-nudge" id="next-tier-nudge" hidden></p>
+        <div class="tier-progress" id="tier-progress" hidden aria-hidden="true">
+            <div class="tier-progress-fill" id="tier-progress-fill"></div>
+        </div>
     </div>
 
     <!-- Calendar grid -->
@@ -1096,7 +1189,6 @@ else if (Model.Did is not null)
                 void tierEl.offsetWidth;
                 tierEl.classList.add('stamp');
                 if (data.tier === 'Hero') {
-                    heroFlash();
                     setTimeout(() => heroJackpot(card, color), 60);
                 } else {
                     const n = { Bronze: 10, Silver: 14, Gold: 20 }[data.tier];
@@ -1120,6 +1212,75 @@ else if (Model.Did is not null)
                 bg.style.background = grad;
                 setTimeout(() => { bg.style.opacity = '1'; }, ANIM_BG_GLOW);
             }
+
+            // ── Action row (share + next-tier) ────────────────────────────
+            setTimeout(() => showActionRow(data), ANIM_MEDAL_DROP + 900);
+        }
+
+        function showActionRow(data) {
+            const row = document.getElementById('action-row');
+            row.hidden = false;
+
+            // Share button — link to Bluesky compose intent
+            document.getElementById('share-btn').href =
+                'https://bsky.app/intent/compose?text=' + encodeURIComponent(buildShareText(data));
+
+            // Next-tier nudge
+            const nudge = buildNudge(data);
+            if (nudge) {
+                const nudgeEl = document.getElementById('next-tier-nudge');
+                nudgeEl.innerHTML = nudge.html;
+                nudgeEl.hidden = false;
+                if (nudge.progress !== undefined) {
+                    const bar = document.getElementById('tier-progress');
+                    bar.hidden = false;
+                    setTimeout(() => {
+                        const fill = document.getElementById('tier-progress-fill');
+                        fill.style.width = nudge.progress + '%';
+                        fill.style.background = nudge.color;
+                    }, 80);
+                }
+            }
+
+            // Fade + slide in
+            requestAnimationFrame(() => row.classList.add('visible'));
+        }
+
+        function buildShareText(data) {
+            const emojis = { Bronze: '🥉', Silver: '🥈', Gold: '🥇', Hero: '👑' };
+            const emoji  = emojis[data.tier] ?? '';
+            const url    = window.location.href;
+            if (data.totalImagePosts === 0) {
+                return `I checked my #AltHeroes score on Bluesky — no image posts with alt text yet, but I'm on it!\n\nCheck yours: ${url}`;
+            }
+            if (data.tier === 'None') {
+                return `I just checked my #AltHeroes score — ${fmtScore(data.score)} of my Bluesky image posts have alt text. Time to level up!\n\nCheck yours: ${url}`;
+            }
+            return `I just earned ${data.tier} tier ${emoji} on #AltHeroes — ${fmtScore(data.score)} of my Bluesky image posts have alt text!\n\nCheck yours: ${url}`;
+        }
+
+        function buildNudge(data) {
+            const thresholds = {
+                None:   { next: 'Bronze', target: 60, color: '#cd7f32', emoji: '🥉' },
+                Bronze: { next: 'Silver', target: 75, color: '#94a3b8', emoji: '🥈' },
+                Silver: { next: 'Gold',   target: 85, color: '#f59e0b', emoji: '🥇' },
+                Gold:   { next: 'Hero',   target: 95, color: '#a855f7', emoji: '👑' },
+            };
+            if (data.tier === 'Hero') {
+                return { html: '♿ <strong>True accessibility hero!</strong> You\'re setting the standard for the whole community.' };
+            }
+            const info = thresholds[data.tier];
+            if (!info) return null;
+            if (data.totalImagePosts === 0) {
+                return { html: `Start adding alt text to your images to earn your first medal ${info.emoji}` };
+            }
+            const gap      = (info.target - data.score).toFixed(1);
+            const progress = Math.round(Math.min(data.score / info.target * 100, 99));
+            return {
+                html: `You\'re <strong>${gap}%</strong> away from <strong>${info.next}</strong> ${info.emoji}`,
+                color: info.color,
+                progress,
+            };
         }
 
         // Score counter — eases up from 0 to target over duration ms
@@ -1137,21 +1298,6 @@ else if (Model.Did is not null)
         function fmtScore(v) {
             // Omit the decimal when the value rounds to 100
             return (v >= 99.95 ? '100' : v.toFixed(1)) + '%';
-        }
-
-        // Full-screen white flash for the jackpot moment
-        function heroFlash() {
-            const flash = document.createElement('div');
-            flash.style.cssText =
-                'position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:9999;transition:none';
-            document.body.appendChild(flash);
-            void flash.offsetWidth;
-            flash.style.opacity = '0.7';
-            setTimeout(() => {
-                flash.style.transition = 'opacity 0.75s ease';
-                flash.style.opacity = '0';
-                flash.addEventListener('transitionend', () => flash.remove());
-            }, 65);
         }
 
         // Four waves of multi-colour sparks for the jackpot

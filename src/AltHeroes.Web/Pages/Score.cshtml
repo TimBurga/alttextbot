@@ -146,10 +146,23 @@
         }
 
         /* ── Hero result card ────────────────────────────── */
-        #hero-display {
-            display: none;
-            opacity: 0;
+        /* Wrapper uses CSS grid row trick: animates height 0→auto, no layout snap */
+        .hero-wrapper {
+            display: grid;
+            grid-template-rows: 0fr;
+            margin-bottom: 0;
+            transition:
+                grid-template-rows 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+                margin-bottom      0.65s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .hero-wrapper.open {
+            grid-template-rows: 1fr;
             margin-bottom: 2rem;
+        }
+
+        #hero-display {
+            min-height: 0;
+            opacity: 0;
             border-radius: 16px;
             border: 2px solid var(--border);
             padding: 2rem 2.5rem;
@@ -167,9 +180,10 @@
             box-shadow: 0 0 60px rgba(99, 102, 241, 0.1);
         }
 
-        /* Multi-bounce entrance animation */
+        /* Smooth slide-up entrance animation */
         #hero-display.revealed {
-            animation: cardReveal 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+            overflow: visible;
+            animation: cardReveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
         /* Brief bright flash across the card face on reveal */
@@ -185,12 +199,10 @@
         }
 
         @@keyframes cardReveal {
-            0%   { opacity: 0.25; transform: translateY(0) scale(1); }
-            28%  { opacity: 1;    transform: translateY(-20px) scale(1.04); }
-            52%  { transform: translateY(9px) scale(0.987); }
-            72%  { transform: translateY(-6px) scale(1.013); }
-            88%  { transform: translateY(2px) scale(0.998); }
-            100% { opacity: 1;    transform: translateY(0) scale(1); }
+            0%   { opacity: 0;    transform: translateY(32px) scale(0.96); filter: blur(6px); }
+            55%  { opacity: 1;    transform: translateY(-4px) scale(1.012); filter: blur(0); }
+            78%  { transform: translateY(2px) scale(0.998); }
+            100% { opacity: 1;    transform: translateY(0)   scale(1);     filter: blur(0); }
         }
 
         @@keyframes revealFlash {
@@ -801,16 +813,18 @@ else if (Model.Did is not null)
     </div>
 
     <!-- Result card (revealed on done) -->
-    <div id="hero-display" aria-live="polite">
-        <div class="hero-glow" id="hero-glow"></div>
-        <div class="sparks" id="sparks"></div>
-        <div class="tier-medals">
-            <span class="tier-medal" id="medal-left"></span>
-            <div class="hero-tier-name" id="hero-tier"></div>
-            <span class="tier-medal" id="medal-right"></span>
+    <div class="hero-wrapper" id="hero-wrapper">
+        <div id="hero-display" aria-live="polite">
+            <div class="hero-glow" id="hero-glow"></div>
+            <div class="sparks" id="sparks"></div>
+            <div class="tier-medals">
+                <span class="tier-medal" id="medal-left"></span>
+                <div class="hero-tier-name" id="hero-tier"></div>
+                <span class="tier-medal" id="medal-right"></span>
+            </div>
+            <div class="hero-score" id="hero-score"></div>
+            <div class="hero-detail" id="hero-detail"></div>
         </div>
-        <div class="hero-score" id="hero-score"></div>
-        <div class="hero-detail" id="hero-detail"></div>
     </div>
 
     <!-- Calendar grid -->
@@ -971,8 +985,9 @@ else if (Model.Did is not null)
             document.getElementById('pulse-dot')?.classList.add('fast');
             document.getElementById('status-text').textContent = 'Calculating result…';
 
+            // Open wrapper first (height animates in smoothly), then trigger building glow
+            document.getElementById('hero-wrapper').classList.add('open');
             const card = document.getElementById('hero-display');
-            card.style.display = 'block';
             void card.offsetWidth;
             card.classList.add('building');
         });
@@ -1020,7 +1035,13 @@ else if (Model.Did is not null)
         };
 
         function showResult(data) {
-            document.getElementById('status-bar').remove();
+            // Fade status bar out smoothly so its disappearance doesn't snap the layout
+            const sb = document.getElementById('status-bar');
+            if (sb) {
+                sb.style.transition = 'opacity 0.3s ease';
+                sb.style.opacity = '0';
+                setTimeout(() => sb.remove(), 350);
+            }
 
             const color = TIER_COLORS[data.tier] ?? '#6b7280';
             const card = document.getElementById('hero-display');
@@ -1053,8 +1074,7 @@ else if (Model.Did is not null)
             document.getElementById('medal-left').textContent = medalL;
             document.getElementById('medal-right').textContent = medalR;
 
-            // ── Stage 1: Card bounces in ──────────────────────────────────
-            card.style.display = 'block';
+            // ── Stage 1: Card slides in ──────────────────────────────────
             card.classList.remove('building');
             void card.offsetWidth;
             card.classList.add('revealed');

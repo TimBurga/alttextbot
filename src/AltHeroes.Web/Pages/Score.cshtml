@@ -14,6 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/shared.css">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -761,14 +762,14 @@
         [data-theme="light"] .theme-toggle .sun { display: none; }
         [data-theme="light"] .theme-toggle .moon { display: block; }
     </style>
+    <script>
+    function toggleTheme() {
+        var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('altheroes_theme', t);
+    }
+    </script>
 </head>
-<script>
-function toggleTheme() {
-    var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('altheroes_theme', t);
-}
-</script>
 <body>
 
 <div id="bg-glow"></div>
@@ -795,7 +796,7 @@ function toggleTheme() {
 else if (Model.Did is not null)
 {
     <!-- Status bar -->
-    <div id="status-bar">
+    <div id="status-bar" aria-live="polite">
         <div class="pulse-dot" id="pulse-dot"></div>
         <span id="status-text">Loading posts for @Model.Q…</span>
     </div>
@@ -805,9 +806,9 @@ else if (Model.Did is not null)
         <div class="hero-glow" id="hero-glow"></div>
         <div class="sparks" id="sparks"></div>
         <div class="tier-medals">
-            <span class="tier-medal" id="medal-left"></span>
+            <span class="tier-medal" id="medal-left" aria-hidden="true"></span>
             <div class="hero-tier-name" id="hero-tier"></div>
-            <span class="tier-medal" id="medal-right"></span>
+            <span class="tier-medal" id="medal-right" aria-hidden="true"></span>
         </div>
         <div class="hero-score" id="hero-score"></div>
         <div class="hero-detail" id="hero-detail"></div>

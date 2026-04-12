@@ -41,21 +41,6 @@
             font-size: 14px;
         }
 
-        /* Subtle dot-grid background texture — matches landing page */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: radial-gradient(circle, rgba(99,102,241,0.09) 1px, transparent 1px);
-            background-size: 28px 28px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        [data-theme="light"] body::before {
-            background-image: radial-gradient(circle, rgba(99,102,241,0.13) 1px, transparent 1px);
-        }
-
         /* ── Tier-reactive page background ──────────────── */
         #bg-glow {
             position: fixed;
@@ -757,20 +742,10 @@
 
         .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
-        .theme-toggle .sun { display: block; }
-        .theme-toggle .moon { display: none; }
-        [data-theme="light"] .theme-toggle .sun { display: none; }
-        [data-theme="light"] .theme-toggle .moon { display: block; }
     </style>
-    <script>
-    function toggleTheme() {
-        var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', t);
-        localStorage.setItem('altheroes_theme', t);
-    }
-    </script>
+    <script src="/js/shared.js" defer></script>
 </head>
-<body>
+<body class="dot-grid">
 
 <div id="bg-glow"></div>
 
@@ -994,12 +969,23 @@ else if (Model.Did is not null)
         };
 
         // ── Final result reveal ───────────────────────────────────────────
+
+        // Animation stage timing (ms) — keyed to CSS @keyframe durations so both
+        // stay in sync: cardReveal 1.4s, tierStamp 0.55s, medalDrop 0.85s.
+        const ANIM_SCORE_IN   = 520;   // count-up starts midway through card bounce
+        const ANIM_TIER_STAMP = 1050;  // tier name stamps after card settles
+        const ANIM_MEDAL_DROP = 1480;  // medals drop after tier stamp (1050 + 430)
+        const ANIM_BG_GLOW    = 200;   // page glow fades in with slight delay
+
+        // Derive tier display colours from CSS custom properties — single source
+        // of truth; values are defined in :root above and need not be repeated here.
+        const _cs = getComputedStyle(document.documentElement);
         const TIER_COLORS = {
-            None:   '#6b7280',
-            Bronze: '#cd7f32',
-            Silver: '#94a3b8',
-            Gold:   '#f59e0b',
-            Hero:   '#a855f7'
+            None:   _cs.getPropertyValue('--muted').trim(),
+            Bronze: _cs.getPropertyValue('--bronze').trim(),
+            Silver: _cs.getPropertyValue('--silver').trim(),
+            Gold:   _cs.getPropertyValue('--gold').trim(),
+            Hero:   _cs.getPropertyValue('--hero').trim()
         };
 
         const TIER_MEDALS = {
@@ -1013,12 +999,13 @@ else if (Model.Did is not null)
         // For Hero the two sides are different — crown left, trophy right
         const TIER_MEDALS_RIGHT = { ...TIER_MEDALS, Hero: '🏆' };
 
-        // 6. Tier-reactive background gradients
+        // Page background gradients — colours from TIER_COLORS; alpha suffixes:
+        // 24 ≈ 14% opacity, 33 ≈ 20% opacity (Hero gets a stronger glow).
         const TIER_BG = {
-            Bronze: 'radial-gradient(ellipse at 50% 0%, rgba(205,127,50,0.14) 0%, transparent 65%)',
-            Silver: 'radial-gradient(ellipse at 50% 0%, rgba(148,163,184,0.14) 0%, transparent 65%)',
-            Gold:   'radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.14) 0%, transparent 65%)',
-            Hero:   'radial-gradient(ellipse at 50% 0%, rgba(168,85,247,0.20) 0%, transparent 65%)'
+            Bronze: `radial-gradient(ellipse at 50% 0%, ${TIER_COLORS.Bronze}24 0%, transparent 65%)`,
+            Silver: `radial-gradient(ellipse at 50% 0%, ${TIER_COLORS.Silver}24 0%, transparent 65%)`,
+            Gold:   `radial-gradient(ellipse at 50% 0%, ${TIER_COLORS.Gold}24 0%, transparent 65%)`,
+            Hero:   `radial-gradient(ellipse at 50% 0%, ${TIER_COLORS.Hero}33 0%, transparent 65%)`
         };
 
         function showResult(data) {
@@ -1061,7 +1048,7 @@ else if (Model.Did is not null)
             void card.offsetWidth;
             card.classList.add('revealed');
 
-            // ── Stage 2: Score counts in (T+520ms) ───────────────────────
+            // ── Stage 2: Score counts in ──────────────────────────────────
             setTimeout(() => {
                 scoreEl.style.transition = 'opacity 0.3s ease';
                 detailEl.style.transition = 'opacity 0.3s ease 0.12s';
@@ -1073,9 +1060,9 @@ else if (Model.Did is not null)
                     scoreEl.style.opacity = '1';
                 }
                 detailEl.style.opacity = '1';
-            }, 520);
+            }, ANIM_SCORE_IN);
 
-            // ── Stage 3: Tier name stamps in (T+1050ms) ──────────────────
+            // ── Stage 3: Tier name stamps in ──────────────────────────────
             setTimeout(() => {
                 tierEl.style.opacity = '1';
                 void tierEl.offsetWidth;
@@ -1087,16 +1074,15 @@ else if (Model.Did is not null)
                     const n = { Bronze: 10, Silver: 14, Gold: 20 }[data.tier];
                     if (n) launchSparks(card, color, n);
                 }
-            }, 1050);
+            }, ANIM_TIER_STAMP);
 
             // ── Stage 4: Medals drop in ───────────────────────────────────
-            const medalDelay = 1480;
             if (medalL) {
                 setTimeout(() => {
                     document.getElementById('medal-left').classList.add('drop');
                     setTimeout(() =>
                         document.getElementById('medal-right').classList.add('drop'), 130);
-                }, medalDelay);
+                }, ANIM_MEDAL_DROP);
             }
 
             // ── Tier-reactive background ──────────────────────────────────
@@ -1104,7 +1090,7 @@ else if (Model.Did is not null)
             if (grad) {
                 const bg = document.getElementById('bg-glow');
                 bg.style.background = grad;
-                setTimeout(() => { bg.style.opacity = '1'; }, 200);
+                setTimeout(() => { bg.style.opacity = '1'; }, ANIM_BG_GLOW);
             }
         }
 

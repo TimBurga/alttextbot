@@ -212,9 +212,9 @@ else if (Model.Subscribers is { } subs)
 
     <div class="toolbar">
         <input type="search" id="search" placeholder="Filter by DID…" oninput="filterTable()" />
-        <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All</button>
-        <button class="filter-btn" id="filter-blocked" onclick="setFilter('blocked')">Blocked only</button>
-        <button class="filter-btn" id="filter-active" onclick="setFilter('active')">Active only</button>
+        <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All (@subs.Count)</button>
+        <button class="filter-btn" id="filter-blocked" onclick="setFilter('blocked')">Blocked only (@blocked)</button>
+        <button class="filter-btn" id="filter-active" onclick="setFilter('active')">Active only (@(subs.Count - blocked))</button>
     </div>
 
     <div class="table-wrap">
@@ -246,6 +246,10 @@ else if (Model.Subscribers is { } subs)
                             <button class="btn btn-rescore" data-action="rescore" data-did="@sub.Did" @(sub.Blocked ? "disabled" : "")>Rescore</button>
                         </td>
                     </tr>
+                }
+                @if (!subs.Items.Any())
+                {
+                    <tr class="empty-row"><td colspan="4">No subscribers yet.</td></tr>
                 }
             </tbody>
         </table>
@@ -323,6 +327,15 @@ async function rescore(btn, did) {
     }, 'Failed to rescore');
 }
 
+function updateFilterCounts() {
+    const rows = [...document.querySelectorAll('#sub-body tr[data-did]')];
+    const total = rows.length;
+    const blockedCount = rows.filter(r => r.dataset.blocked === 'true').length;
+    document.getElementById('filter-all').textContent = `All (${total})`;
+    document.getElementById('filter-blocked').textContent = `Blocked only (${blockedCount})`;
+    document.getElementById('filter-active').textContent = `Active only (${total - blockedCount})`;
+}
+
 function updateRow(did, blocked) {
     const row = document.querySelector(`tr[data-did="${did}"]`);
     if (!row) return;
@@ -349,6 +362,7 @@ function updateRow(did, blocked) {
         }
     }
     if (rescoreBtn) rescoreBtn.disabled = blocked;
+    updateFilterCounts();
 }
 
 async function action(btn, method, url, onSuccess, errPrefix) {

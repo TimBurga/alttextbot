@@ -10,6 +10,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark light" />
     <title>AltHeroes — @(Model.Q ?? "Score")</title>
+    <meta name="description" content="See how consistently @(Model.Q ?? "this user") adds alt text to their Bluesky images.">
+    <meta property="og:title" content="AltHeroes — @(Model.Q ?? "Score")">
+    <meta property="og:description" content="Check @(Model.Q ?? "this user")'s Bluesky alt text score on AltHeroes.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script>(function(){var t=localStorage.getItem('altheroes_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -414,15 +419,16 @@
             50%       { outline-color: var(--hero); }
         }
 
-        /* 2. Golden glow for fully-captioned days */
-        .day-cell.starred {
-            background: rgba(245,158,11,0.10) !important;
-            border-color: rgba(245,158,11,0.45) !important;
-            box-shadow: inset 0 0 14px rgba(245,158,11,0.18) !important;
+        /* 2. Golden glow for fully-captioned days.
+           .active.starred has higher specificity than .active alone, so no !important needed. */
+        .day-cell.active.starred {
+            background: rgba(245,158,11,0.10);
+            border-color: rgba(245,158,11,0.45);
+            box-shadow: inset 0 0 14px rgba(245,158,11,0.18);
         }
 
         /* 7. Shimmer sweep on starred (fully-captioned) days */
-        .day-cell.starred::before {
+        .day-cell.active.starred::before {
             content: '';
             position: absolute;
             inset: 0;
@@ -553,15 +559,20 @@
             cursor: pointer;
         }
 
+        /* Hover overrides the gold starred styles.
+           Same specificity as .active.starred, but later in the file so cascade wins. */
         .day-cell.has-posts:hover {
-            border-color: rgba(99,102,241,0.55) !important;
-            background: var(--surface2) !important;
+            border-color: rgba(99,102,241,0.55);
+            background: var(--surface2);
         }
 
         .day-cell.selected {
-            outline: 2px solid var(--accent) !important;
+            outline: 2px solid var(--accent);
             outline-offset: 1px;
-            animation: none !important;
+        }
+        /* Suppress the scanning ring animation when the cell is user-selected */
+        .day-cell.scanning.selected {
+            animation: none;
         }
 
         /* ── Day-detail panel ────────────────────────────── */
@@ -577,6 +588,15 @@
         @@keyframes panelSlide {
             from { opacity: 0; transform: translateY(-6px); }
             to   { opacity: 1; transform: translateY(0); }
+        }
+
+        #post-panel.closing {
+            animation: panelSlideOut 0.15s ease-in forwards;
+        }
+
+        @@keyframes panelSlideOut {
+            from { opacity: 1; transform: translateY(0); }
+            to   { opacity: 0; transform: translateY(-6px); }
         }
 
         .post-panel-header {
@@ -770,6 +790,14 @@
 }
 else if (Model.Did is not null)
 {
+    <noscript>
+        <div class="error-card">
+            <h2>JavaScript required</h2>
+            <p>AltHeroes streams your score in real time — please enable JavaScript to view your results.</p>
+        </div>
+        <a class="back-link" href="/">← Try another handle</a>
+    </noscript>
+
     <!-- Status bar -->
     <div id="status-bar" aria-live="polite">
         <div class="pulse-dot" id="pulse-dot"></div>
@@ -1154,6 +1182,16 @@ else if (Model.Did is not null)
             }
         }
         // ── Day-detail panel ──────────────────────────────────────────────
+        function closePostPanel() {
+            const panel = document.getElementById('post-panel');
+            document.querySelector('.day-cell.selected')?.classList.remove('selected');
+            panel.classList.add('closing');
+            panel.addEventListener('animationend', () => {
+                panel.hidden = true;
+                panel.classList.remove('closing');
+            }, { once: true });
+        }
+
         document.getElementById('calendars').addEventListener('click', e => {
             const cell = e.target.closest('.day-cell.has-posts');
             if (!cell || !cell.dataset.date) return;
@@ -1161,8 +1199,7 @@ else if (Model.Did is not null)
 
             // Toggle: clicking the selected cell closes the panel
             if (cell.classList.contains('selected')) {
-                cell.classList.remove('selected');
-                document.getElementById('post-panel').hidden = true;
+                closePostPanel();
                 return;
             }
 
@@ -1171,10 +1208,7 @@ else if (Model.Did is not null)
             showPostPanel(date);
         });
 
-        document.getElementById('post-panel-close').addEventListener('click', () => {
-            document.getElementById('post-panel').hidden = true;
-            document.querySelector('.day-cell.selected')?.classList.remove('selected');
-        });
+        document.getElementById('post-panel-close').addEventListener('click', closePostPanel);
 
         function showPostPanel(date) {
             const posts = dayPostsMap.get(date) ?? [];

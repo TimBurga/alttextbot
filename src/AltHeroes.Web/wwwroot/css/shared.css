@@ -1,0 +1,39 @@
+/* ── Visually-hidden utility ─────────────────────────────────────────────────
+   Hides content visually while keeping it accessible to screen readers.
+   Use for labels or descriptive text where the visual context already conveys
+   the meaning to sighted users. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ── Theme toggle: sun/moon visibility ───────────────────────────────────────
+   Positioning and sizing are set per-page. Only the light/dark icon swap is
+   shared — it is identical across all three page contexts. */
+.theme-toggle .sun  { display: block; }
+.theme-toggle .moon { display: none; }
+[data-theme="light"] .theme-toggle .sun  { display: none; }
+[data-theme="light"] .theme-toggle .moon { display: block; }
+
+/* ── Dot-grid background texture ─────────────────────────────────────────────
+   Add class="dot-grid" to <body> on pages that want this texture.
+   Admin pages omit it intentionally. */
+.dot-grid::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(99,102,241,0.09) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+}
+[data-theme="light"] .dot-grid::before {
+    background-image: radial-gradient(circle, rgba(99,102,241,0.13) 1px, transparent 1px);
+}

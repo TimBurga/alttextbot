@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark light" />
     <title>@ViewData["Title"] — AltHeroes Admin</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script>(function(){var t=localStorage.getItem('altheroes_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/shared.css">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -161,11 +163,8 @@
 
         .theme-toggle:hover { border-color: var(--text); color: var(--text); }
 
-        .theme-toggle .sun { display: block; }
-        .theme-toggle .moon { display: none; }
-        [data-theme="light"] .theme-toggle .sun { display: none; }
-        [data-theme="light"] .theme-toggle .moon { display: block; }
     </style>
+    <script src="/js/shared.js" defer></script>
 </head>
 <body>
 <header>
@@ -192,12 +191,6 @@
 <div class="toast-container" id="toasts"></div>
 
 <script>
-function toggleTheme() {
-    var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('altheroes_theme', t);
-}
-
 function toast(msg, type = 'success') {
     const el = document.createElement('div');
     el.className = `toast ${type}`;

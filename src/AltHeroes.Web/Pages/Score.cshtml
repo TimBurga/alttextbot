@@ -10,10 +10,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark light" />
     <title>AltHeroes — @(Model.Q ?? "Score")</title>
+    <meta name="description" content="See how consistently @(Model.Q ?? "this user") adds alt text to their Bluesky images.">
+    <meta property="og:title" content="AltHeroes — @(Model.Q ?? "Score")">
+    <meta property="og:description" content="Check @(Model.Q ?? "this user")'s Bluesky alt text score on AltHeroes.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script>(function(){var t=localStorage.getItem('altheroes_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/shared.css">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -38,21 +44,6 @@
             color: var(--text);
             min-height: 100vh;
             font-size: 14px;
-        }
-
-        /* Subtle dot-grid background texture — matches landing page */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: radial-gradient(circle, rgba(99,102,241,0.09) 1px, transparent 1px);
-            background-size: 28px 28px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        [data-theme="light"] body::before {
-            background-image: radial-gradient(circle, rgba(99,102,241,0.13) 1px, transparent 1px);
         }
 
         /* ── Tier-reactive page background ──────────────── */
@@ -428,15 +419,16 @@
             50%       { outline-color: var(--hero); }
         }
 
-        /* 2. Golden glow for fully-captioned days */
-        .day-cell.starred {
-            background: rgba(245,158,11,0.10) !important;
-            border-color: rgba(245,158,11,0.45) !important;
-            box-shadow: inset 0 0 14px rgba(245,158,11,0.18) !important;
+        /* 2. Golden glow for fully-captioned days.
+           .active.starred has higher specificity than .active alone, so no !important needed. */
+        .day-cell.active.starred {
+            background: rgba(245,158,11,0.10);
+            border-color: rgba(245,158,11,0.45);
+            box-shadow: inset 0 0 14px rgba(245,158,11,0.18);
         }
 
         /* 7. Shimmer sweep on starred (fully-captioned) days */
-        .day-cell.starred::before {
+        .day-cell.active.starred::before {
             content: '';
             position: absolute;
             inset: 0;
@@ -567,15 +559,20 @@
             cursor: pointer;
         }
 
+        /* Hover overrides the gold starred styles.
+           Same specificity as .active.starred, but later in the file so cascade wins. */
         .day-cell.has-posts:hover {
-            border-color: rgba(99,102,241,0.55) !important;
-            background: var(--surface2) !important;
+            border-color: rgba(99,102,241,0.55);
+            background: var(--surface2);
         }
 
         .day-cell.selected {
-            outline: 2px solid var(--accent) !important;
+            outline: 2px solid var(--accent);
             outline-offset: 1px;
-            animation: none !important;
+        }
+        /* Suppress the scanning ring animation when the cell is user-selected */
+        .day-cell.scanning.selected {
+            animation: none;
         }
 
         /* ── Day-detail panel ────────────────────────────── */
@@ -591,6 +588,15 @@
         @@keyframes panelSlide {
             from { opacity: 0; transform: translateY(-6px); }
             to   { opacity: 1; transform: translateY(0); }
+        }
+
+        #post-panel.closing {
+            animation: panelSlideOut 0.15s ease-in forwards;
+        }
+
+        @@keyframes panelSlideOut {
+            from { opacity: 1; transform: translateY(0); }
+            to   { opacity: 0; transform: translateY(-6px); }
         }
 
         .post-panel-header {
@@ -756,20 +762,10 @@
 
         .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
-        .theme-toggle .sun { display: block; }
-        .theme-toggle .moon { display: none; }
-        [data-theme="light"] .theme-toggle .sun { display: none; }
-        [data-theme="light"] .theme-toggle .moon { display: block; }
     </style>
+    <script src="/js/shared.js" defer></script>
 </head>
-<script>
-function toggleTheme() {
-    var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('altheroes_theme', t);
-}
-</script>
-<body>
+<body class="dot-grid">
 
 <div id="bg-glow"></div>
 
@@ -794,8 +790,16 @@ function toggleTheme() {
 }
 else if (Model.Did is not null)
 {
+    <noscript>
+        <div class="error-card">
+            <h2>JavaScript required</h2>
+            <p>AltHeroes streams your score in real time — please enable JavaScript to view your results.</p>
+        </div>
+        <a class="back-link" href="/">← Try another handle</a>
+    </noscript>
+
     <!-- Status bar -->
-    <div id="status-bar">
+    <div id="status-bar" aria-live="polite">
         <div class="pulse-dot" id="pulse-dot"></div>
         <span id="status-text">Loading posts for @Model.Q…</span>
     </div>
@@ -805,9 +809,9 @@ else if (Model.Did is not null)
         <div class="hero-glow" id="hero-glow"></div>
         <div class="sparks" id="sparks"></div>
         <div class="tier-medals">
-            <span class="tier-medal" id="medal-left"></span>
+            <span class="tier-medal" id="medal-left" aria-hidden="true"></span>
             <div class="hero-tier-name" id="hero-tier"></div>
-            <span class="tier-medal" id="medal-right"></span>
+            <span class="tier-medal" id="medal-right" aria-hidden="true"></span>
         </div>
         <div class="hero-score" id="hero-score"></div>
         <div class="hero-detail" id="hero-detail"></div>
@@ -918,7 +922,7 @@ else if (Model.Did is not null)
 
             const countEl = cell.querySelector('.count');
             if (!countEl) return;
-            countEl.textContent = (parseInt(countEl.textContent) || 0) + 1;
+            countEl.textContent = (parseInt(countEl.textContent, 10) || 0) + 1;
 
             // 4. Flash + 5. roll — remove then re-add to retrigger animation
             cell.classList.remove('pop', 'flash');
@@ -986,18 +990,30 @@ else if (Model.Did is not null)
         });
 
         source.onerror = () => {
+            if (source.readyState === EventSource.CLOSED) return;
             source.close();
             document.getElementById('status-text').textContent = 'Connection error — please reload.';
             document.getElementById('pulse-dot').style.background = '#ef4444';
         };
 
         // ── Final result reveal ───────────────────────────────────────────
+
+        // Animation stage timing (ms) — keyed to CSS @keyframe durations so both
+        // stay in sync: cardReveal 1.4s, tierStamp 0.55s, medalDrop 0.85s.
+        const ANIM_SCORE_IN   = 520;   // count-up starts midway through card bounce
+        const ANIM_TIER_STAMP = 1050;  // tier name stamps after card settles
+        const ANIM_MEDAL_DROP = 1480;  // medals drop after tier stamp (1050 + 430)
+        const ANIM_BG_GLOW    = 200;   // page glow fades in with slight delay
+
+        // Derive tier display colours from CSS custom properties — single source
+        // of truth; values are defined in :root above and need not be repeated here.
+        const _cs = getComputedStyle(document.documentElement);
         const TIER_COLORS = {
-            None:   '#6b7280',
-            Bronze: '#cd7f32',
-            Silver: '#94a3b8',
-            Gold:   '#f59e0b',
-            Hero:   '#a855f7'
+            None:   _cs.getPropertyValue('--muted').trim(),
+            Bronze: _cs.getPropertyValue('--bronze').trim(),
+            Silver: _cs.getPropertyValue('--silver').trim(),
+            Gold:   _cs.getPropertyValue('--gold').trim(),
+            Hero:   _cs.getPropertyValue('--hero').trim()
         };
 
         const TIER_MEDALS = {
@@ -1011,12 +1027,13 @@ else if (Model.Did is not null)
         // For Hero the two sides are different — crown left, trophy right
         const TIER_MEDALS_RIGHT = { ...TIER_MEDALS, Hero: '🏆' };
 
-        // 6. Tier-reactive background gradients
+        // Page background gradients — colours from TIER_COLORS; alpha suffixes:
+        // 24 ≈ 14% opacity, 33 ≈ 20% opacity (Hero gets a stronger glow).
         const TIER_BG = {
-            Bronze: 'radial-gradient(ellipse at 50% 0%, rgba(205,127,50,0.14) 0%, transparent 65%)',
-            Silver: 'radial-gradient(ellipse at 50% 0%, rgba(148,163,184,0.14) 0%, transparent 65%)',
-            Gold:   'radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.14) 0%, transparent 65%)',
-            Hero:   'radial-gradient(ellipse at 50% 0%, rgba(168,85,247,0.20) 0%, transparent 65%)'
+            Bronze: `radial-gradient(ellipse at 50% 0%, ${TIER_COLORS.Bronze}24 0%, transparent 65%)`,
+            Silver: `radial-gradient(ellipse at 50% 0%, ${TIER_COLORS.Silver}24 0%, transparent 65%)`,
+            Gold:   `radial-gradient(ellipse at 50% 0%, ${TIER_COLORS.Gold}24 0%, transparent 65%)`,
+            Hero:   `radial-gradient(ellipse at 50% 0%, ${TIER_COLORS.Hero}33 0%, transparent 65%)`
         };
 
         function showResult(data) {
@@ -1059,7 +1076,7 @@ else if (Model.Did is not null)
             void card.offsetWidth;
             card.classList.add('revealed');
 
-            // ── Stage 2: Score counts in (T+520ms) ───────────────────────
+            // ── Stage 2: Score counts in ──────────────────────────────────
             setTimeout(() => {
                 scoreEl.style.transition = 'opacity 0.3s ease';
                 detailEl.style.transition = 'opacity 0.3s ease 0.12s';
@@ -1071,9 +1088,9 @@ else if (Model.Did is not null)
                     scoreEl.style.opacity = '1';
                 }
                 detailEl.style.opacity = '1';
-            }, 520);
+            }, ANIM_SCORE_IN);
 
-            // ── Stage 3: Tier name stamps in (T+1050ms) ──────────────────
+            // ── Stage 3: Tier name stamps in ──────────────────────────────
             setTimeout(() => {
                 tierEl.style.opacity = '1';
                 void tierEl.offsetWidth;
@@ -1085,16 +1102,15 @@ else if (Model.Did is not null)
                     const n = { Bronze: 10, Silver: 14, Gold: 20 }[data.tier];
                     if (n) launchSparks(card, color, n);
                 }
-            }, 1050);
+            }, ANIM_TIER_STAMP);
 
             // ── Stage 4: Medals drop in ───────────────────────────────────
-            const medalDelay = 1480;
             if (medalL) {
                 setTimeout(() => {
                     document.getElementById('medal-left').classList.add('drop');
                     setTimeout(() =>
                         document.getElementById('medal-right').classList.add('drop'), 130);
-                }, medalDelay);
+                }, ANIM_MEDAL_DROP);
             }
 
             // ── Tier-reactive background ──────────────────────────────────
@@ -1102,7 +1118,7 @@ else if (Model.Did is not null)
             if (grad) {
                 const bg = document.getElementById('bg-glow');
                 bg.style.background = grad;
-                setTimeout(() => { bg.style.opacity = '1'; }, 200);
+                setTimeout(() => { bg.style.opacity = '1'; }, ANIM_BG_GLOW);
             }
         }
 
@@ -1166,6 +1182,16 @@ else if (Model.Did is not null)
             }
         }
         // ── Day-detail panel ──────────────────────────────────────────────
+        function closePostPanel() {
+            const panel = document.getElementById('post-panel');
+            document.querySelector('.day-cell.selected')?.classList.remove('selected');
+            panel.classList.add('closing');
+            panel.addEventListener('animationend', () => {
+                panel.hidden = true;
+                panel.classList.remove('closing');
+            }, { once: true });
+        }
+
         document.getElementById('calendars').addEventListener('click', e => {
             const cell = e.target.closest('.day-cell.has-posts');
             if (!cell || !cell.dataset.date) return;
@@ -1173,8 +1199,7 @@ else if (Model.Did is not null)
 
             // Toggle: clicking the selected cell closes the panel
             if (cell.classList.contains('selected')) {
-                cell.classList.remove('selected');
-                document.getElementById('post-panel').hidden = true;
+                closePostPanel();
                 return;
             }
 
@@ -1183,10 +1208,7 @@ else if (Model.Did is not null)
             showPostPanel(date);
         });
 
-        document.getElementById('post-panel-close').addEventListener('click', () => {
-            document.getElementById('post-panel').hidden = true;
-            document.querySelector('.day-cell.selected')?.classList.remove('selected');
-        });
+        document.getElementById('post-panel-close').addEventListener('click', closePostPanel);
 
         function showPostPanel(date) {
             const posts = dayPostsMap.get(date) ?? [];
@@ -1202,7 +1224,7 @@ else if (Model.Did is not null)
                         ? `<span class="img-alt-text">${escapeHtml(img.altText)}</span>`
                         : `<span class="img-alt-text no-alt">No alt text</span>`;
                     const thumbHtml = img.thumbUrl
-                        ? `<img class="post-image-thumb" src="${img.thumbUrl}" alt="" loading="lazy">`
+                        ? `<img class="post-image-thumb" src="${escapeAttr(img.thumbUrl)}" alt="" loading="lazy">`
                         : '';
                     return `<div class="post-image-row">
                         ${thumbHtml}
@@ -1210,7 +1232,7 @@ else if (Model.Did is not null)
                     </div>`;
                 }).join('');
 
-                return `<a class="post-card ${compliantClass}" href="${url}" target="_blank" rel="noopener noreferrer">
+                return `<a class="post-card ${compliantClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">
                     <div class="post-card-top">
                         <span class="post-card-link">View on Bluesky ↗</span>
                     </div>
@@ -1243,10 +1265,12 @@ else if (Model.Did is not null)
                 .replace(/>/g, '&gt;');
         }
 
-        function toggleTheme() {
-            var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', t);
-            localStorage.setItem('altheroes_theme', t);
+        function escapeAttr(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
         }
     })();
     </script>

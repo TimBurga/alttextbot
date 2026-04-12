@@ -918,7 +918,7 @@ else if (Model.Did is not null)
 
             const countEl = cell.querySelector('.count');
             if (!countEl) return;
-            countEl.textContent = (parseInt(countEl.textContent) || 0) + 1;
+            countEl.textContent = (parseInt(countEl.textContent, 10) || 0) + 1;
 
             // 4. Flash + 5. roll — remove then re-add to retrigger animation
             cell.classList.remove('pop', 'flash');
@@ -986,6 +986,7 @@ else if (Model.Did is not null)
         });
 
         source.onerror = () => {
+            if (source.readyState === EventSource.CLOSED) return;
             source.close();
             document.getElementById('status-text').textContent = 'Connection error — please reload.';
             document.getElementById('pulse-dot').style.background = '#ef4444';
@@ -1202,7 +1203,7 @@ else if (Model.Did is not null)
                         ? `<span class="img-alt-text">${escapeHtml(img.altText)}</span>`
                         : `<span class="img-alt-text no-alt">No alt text</span>`;
                     const thumbHtml = img.thumbUrl
-                        ? `<img class="post-image-thumb" src="${img.thumbUrl}" alt="" loading="lazy">`
+                        ? `<img class="post-image-thumb" src="${escapeAttr(img.thumbUrl)}" alt="" loading="lazy">`
                         : '';
                     return `<div class="post-image-row">
                         ${thumbHtml}
@@ -1210,7 +1211,7 @@ else if (Model.Did is not null)
                     </div>`;
                 }).join('');
 
-                return `<a class="post-card ${compliantClass}" href="${url}" target="_blank" rel="noopener noreferrer">
+                return `<a class="post-card ${compliantClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">
                     <div class="post-card-top">
                         <span class="post-card-link">View on Bluesky ↗</span>
                     </div>
@@ -1243,10 +1244,12 @@ else if (Model.Did is not null)
                 .replace(/>/g, '&gt;');
         }
 
-        function toggleTheme() {
-            var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', t);
-            localStorage.setItem('altheroes_theme', t);
+        function escapeAttr(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
         }
     })();
     </script>

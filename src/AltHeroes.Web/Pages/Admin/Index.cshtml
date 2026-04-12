@@ -237,13 +237,13 @@ else if (Model.Subscribers is { } subs)
                         <td class="actions">
                             @if (sub.Blocked)
                             {
-                                <button class="btn btn-unblock" onclick="unblock(this, '@sub.Did')">Unblock</button>
+                                <button class="btn btn-unblock" data-action="unblock" data-did="@sub.Did">Unblock</button>
                             }
                             else
                             {
-                                <button class="btn btn-block" onclick="block(this, '@sub.Did')">Block</button>
+                                <button class="btn btn-block" data-action="block" data-did="@sub.Did">Block</button>
                             }
-                            <button class="btn btn-rescore" onclick="rescore(this, '@sub.Did')" @(sub.Blocked ? "disabled" : "")>Rescore</button>
+                            <button class="btn btn-rescore" data-action="rescore" data-did="@sub.Did" @(sub.Blocked ? "disabled" : "")>Rescore</button>
                         </td>
                     </tr>
                 }
@@ -259,6 +259,17 @@ else
 @section Scripts {
 <script>
 let activeFilter = 'all';
+
+// Single delegated handler for all row action buttons — avoids inline onclick
+// and removes the need to swap onclick strings when toggling block state.
+document.getElementById('sub-body').addEventListener('click', e => {
+    const btn = e.target.closest('.btn[data-action]');
+    if (!btn || btn.disabled) return;
+    const { action, did } = btn.dataset;
+    if (action === 'block') block(btn, did);
+    else if (action === 'unblock') unblock(btn, did);
+    else if (action === 'rescore') rescore(btn, did);
+});
 
 function setFilter(f) {
     activeFilter = f;
@@ -330,11 +341,11 @@ function updateRow(did, blocked) {
         if (blocked) {
             blockBtn.className = 'btn btn-unblock';
             blockBtn.textContent = 'Unblock';
-            blockBtn.setAttribute('onclick', `unblock(this, '${did}')`);
+            blockBtn.dataset.action = 'unblock';
         } else {
             blockBtn.className = 'btn btn-block';
             blockBtn.textContent = 'Block';
-            blockBtn.setAttribute('onclick', `block(this, '${did}')`);
+            blockBtn.dataset.action = 'block';
         }
     }
     if (rescoreBtn) rescoreBtn.disabled = blocked;

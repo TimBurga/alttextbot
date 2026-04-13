@@ -1249,7 +1249,7 @@ else if (Model.Did is not null)
         function buildShareText(data) {
             const emojis = { Bronze: '🥉', Silver: '🥈', Gold: '🥇', Hero: '👑' };
             const emoji  = emojis[data.tier] ?? '';
-            const url    = window.location.href;
+            const url    = window.location.origin;
             if (data.totalImagePosts === 0) {
                 return `I checked my #AltHeroes score on Bluesky — no image posts with alt text yet, but I'm on it!\n\nCheck yours: ${url}`;
             }

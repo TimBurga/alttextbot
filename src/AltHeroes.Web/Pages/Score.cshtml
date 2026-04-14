@@ -498,20 +498,30 @@
                    filter: drop-shadow(0 0 2px #f59e0b40); }
         }
 
+        /* count-wrap is position:absolute so it never contributes to the cell's
+           flex content height — keeping all day-cells uniformly aspect-ratio:1 */
         .count-wrap {
-            position: relative;
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             z-index: 1;
+            pointer-events: none;
+        }
+
+        .count {
+            display: inline-block;
             font-size: 1.6rem;
             font-weight: 800;
             color: #fff;
-            min-height: 1.2em;
             text-shadow: 0 1px 4px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.6);
         }
 
         .count:empty::before { content: '·'; color: transparent; }
 
         /* 5. Slot-machine roll on count increment */
-        .day-cell.pop .count-wrap {
+        .day-cell.pop .count {
             animation: countRoll 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
@@ -719,7 +729,7 @@
             .tier-medal { font-size: 3rem; }
             .hero-score { font-size: 1.25rem; }
             .star { font-size: 20px; }
-            .count-wrap { font-size: 1.3rem; }
+            .count { font-size: 1.3rem; }
             .day-num { font-size: 8px; }
         }
 
@@ -739,7 +749,7 @@
         }
 
         /* Calendar count text in light mode */
-        [data-theme="light"] .count-wrap {
+        [data-theme="light"] .count {
             color: var(--text);
             text-shadow: 0 1px 3px rgba(255,255,255,0.85);
         }
@@ -833,7 +843,7 @@
         /* ── Reduced motion ──────────────────────────────────────────── */
         @@media (prefers-reduced-motion: reduce) {
             .tier-medal, .hero-tier-name, #hero-display,
-            .day-cell, .star, .count-wrap, .pulse-dot,
+            .day-cell, .star, .count-wrap, .count, .pulse-dot,
             #prev-month, #post-panel, #action-row {
                 animation: none !important;
                 transition: none !important;

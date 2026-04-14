@@ -31,6 +31,9 @@ builder.Services.AddOptions<AdminOptions>()
     .Validate(o => o.ApiKey != "changeme-api-key", "Admin:ApiKey must be changed from default.")
     .ValidateOnStart();
 
+builder.Services.AddOptions<DiscordOptions>()
+    .BindConfiguration(DiscordOptions.SectionName);
+
 // ── Singletons ────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<BotState>();
 builder.Services.AddSingleton<BlockedSubscribersStore>();
@@ -40,6 +43,7 @@ builder.Services.AddSingleton<StartupGate>();
 // Named clients for use by singleton services via IHttpClientFactory.
 builder.Services.AddHttpClient(nameof(ListRecordsClient));
 builder.Services.AddHttpClient(nameof(OzoneClient));
+builder.Services.AddHttpClient(nameof(ShutdownNotifierService));
 
 // Singleton services (use IHttpClientFactory internally, safe for long-lived scope)
 builder.Services.AddSingleton<ListRecordsClient>();
@@ -52,8 +56,10 @@ builder.Services.AddSingleton<LabelDiffService>();
 
 // ── Hosted services ───────────────────────────────────────────────────────────
 // BotStartupService runs first (IHostedService ordering is registration order).
+// ShutdownNotifierService is registered last so its StopAsync runs after all others.
 builder.Services.AddHostedService<BotStartupService>();
 builder.Services.AddHostedService<JetstreamWorker>();
+builder.Services.AddHostedService<ShutdownNotifierService>();
 
 var app = builder.Build();
 

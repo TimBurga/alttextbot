@@ -44,7 +44,10 @@ builder.Services.AddHttpClient(nameof(OzoneClient));
 // Singleton services (use IHttpClientFactory internally, safe for long-lived scope)
 builder.Services.AddSingleton<ListRecordsClient>();
 builder.Services.AddSingleton<OzoneClient>();
-builder.Services.AddSingleton<CongratsPostService>();
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddSingleton<ICongratsPostService, LogOnlyCongratsPostService>();
+else
+    builder.Services.AddSingleton<ICongratsPostService, CongratsPostService>();
 builder.Services.AddSingleton<LabelDiffService>();
 
 // ── Hosted services ───────────────────────────────────────────────────────────

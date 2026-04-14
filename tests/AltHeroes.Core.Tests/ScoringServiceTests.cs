@@ -120,12 +120,12 @@ public class ScoringServiceTests
     // ── Tier thresholds ───────────────────────────────────────────────────────
 
     [Theory]
-    [InlineData(0, 10, LabelTier.None)]        // 0%  → None   (< 60%)
-    [InlineData(5, 10, LabelTier.None)]        // 50% → None   (< 60%)
-    [InlineData(6, 10, LabelTier.Bronze)]      // 60% → Bronze (>= 60%, < 75%)
-    [InlineData(7, 10, LabelTier.Bronze)]      // 70% → Bronze (>= 60%, < 75%)
-    [InlineData(8, 10, LabelTier.Silver)]      // 80% → Silver (>= 75%, < 85%)
-    [InlineData(9, 10, LabelTier.Gold)]        // 90% → Gold   (>= 85%, < 95%)
+    [InlineData(0, 10, LabelTier.None)]        // 0%  → None   (< 70%)
+    [InlineData(5, 10, LabelTier.None)]        // 50% → None   (< 70%)
+    [InlineData(6, 10, LabelTier.None)]        // 60% → None   (< 70%)
+    [InlineData(7, 10, LabelTier.Bronze)]      // 70% → Bronze (>= 70%, < 85%)
+    [InlineData(8, 10, LabelTier.Bronze)]      // 80% → Bronze (>= 70%, < 85%)
+    [InlineData(9, 10, LabelTier.Silver)]      // 90% → Silver (>= 85%, < 95%)
     public void TierThresholds_AreCorrect(int compliant, int total, LabelTier expected)
     {
         var posts = Enumerable.Range(0, total).Select(i =>
@@ -155,12 +155,12 @@ public class ScoringServiceTests
     }
 
     [Fact]
-    public void Hero_At95Percent_With3Posts()
+    public void Gold_At95Percent_With20Posts()
     {
-        // 19/20 = 95% exactly, 20 posts → Hero
+        // 19/20 = 95% exactly, 20 posts → Gold (not Hero, requires 100%)
         var posts = Enumerable.Range(1, 20).Select(i =>
             i == 20 ? Post(null, i) : Post("good alt text", i));
-        Score(posts).Tier.Should().Be(LabelTier.Hero);
+        Score(posts).Tier.Should().Be(LabelTier.Gold);
     }
 
     // ── Score / count accuracy ────────────────────────────────────────────────
@@ -180,7 +180,7 @@ public class ScoringServiceTests
         result.TotalImagePosts.Should().Be(4);
         result.CompliantPosts.Should().Be(3);
         result.Score.Should().BeApproximately(75.0, 0.01);
-        result.Tier.Should().Be(LabelTier.Silver);
+        result.Tier.Should().Be(LabelTier.Bronze);
     }
 
     [Fact]

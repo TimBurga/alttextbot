@@ -1262,10 +1262,10 @@ else if (Model.Did is not null)
 
         function buildNudge(data) {
             const thresholds = {
-                None:   { next: 'Bronze', target: 60, color: '#cd7f32', emoji: '🥉' },
-                Bronze: { next: 'Silver', target: 75, color: '#94a3b8', emoji: '🥈' },
-                Silver: { next: 'Gold',   target: 85, color: '#f59e0b', emoji: '🥇' },
-                Gold:   { next: 'Hero',   target: 95, color: '#a855f7', emoji: '👑' },
+                None:   { next: 'Bronze', target: 70,  color: '#cd7f32', emoji: '🥉' },
+                Bronze: { next: 'Silver', target: 85,  color: '#94a3b8', emoji: '🥈' },
+                Silver: { next: 'Gold',   target: 95,  color: '#f59e0b', emoji: '🥇' },
+                Gold:   { next: 'Hero',   target: 100, color: '#a855f7', emoji: '👑' },
             };
             if (data.tier === 'Hero') {
                 return { html: '♿ <strong>True accessibility hero!</strong> You\'re setting the standard for the whole community.' };

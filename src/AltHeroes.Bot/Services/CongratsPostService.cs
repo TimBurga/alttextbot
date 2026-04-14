@@ -8,7 +8,7 @@ namespace AltHeroes.Bot.Services;
 /// <summary>Posts congratulations on Bluesky when a subscriber upgrades tiers.</summary>
 public sealed class CongratsPostService(
     IOptions<BotOptions> botOptions,
-    ILogger<CongratsPostService> logger) : IDisposable
+    ILogger<CongratsPostService> logger) : ICongratsPostService, IDisposable
 {
     private readonly BotOptions _bot = botOptions.Value;
     private readonly SemaphoreSlim _loginLock = new(1, 1);

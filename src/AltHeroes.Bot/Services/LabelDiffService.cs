@@ -9,7 +9,7 @@ namespace AltHeroes.Bot.Services;
 /// </summary>
 public sealed class LabelDiffService(
     OzoneClient ozone,
-    CongratsPostService congrats,
+    ICongratsPostService congrats,
     BotState state,
     ILogger<LabelDiffService> logger)
 {

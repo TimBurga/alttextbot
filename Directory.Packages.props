@@ -16,6 +16,9 @@
     <!-- Bluesky -->
     <PackageVersion Include="idunno.Bluesky" Version="1.7.0" />
 
+    <!-- Database -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.4" />
+
     <!-- HTTP / Resilience -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.3.0" />
 

@@ -2,8 +2,10 @@ using System.Security.Cryptography;
 using System.Text;
 using AltHeroes.Bot;
 using AltHeroes.Bot.Configuration;
+using AltHeroes.Bot.Data;
 using AltHeroes.Bot.Services;
 using AltHeroes.Core;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +36,13 @@ builder.Services.AddOptions<AdminOptions>()
 builder.Services.AddOptions<DiscordOptions>()
     .BindConfiguration(DiscordOptions.SectionName);
 
+// ── Database ──────────────────────────────────────────────────────────────────
+var dataDir = builder.Configuration["DataDir"] ?? "data";
+Directory.CreateDirectory(dataDir);
+var dbPath = Path.Combine(dataDir, "bot.db");
+builder.Services.AddDbContextFactory<BotDbContext>(options =>
+    options.UseSqlite($"Data Source={dbPath}"));
+
 // ── Singletons ────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<BotState>();
 builder.Services.AddSingleton<BlockedSubscribersStore>();
@@ -62,6 +71,14 @@ builder.Services.AddHostedService<JetstreamWorker>();
 builder.Services.AddHostedService<ShutdownNotifierService>();
 
 var app = builder.Build();
+
+// Ensure the database schema exists before the bot starts processing events.
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<BotDbContext>>();
+    await using var db = await dbFactory.CreateDbContextAsync();
+    await db.Database.EnsureCreatedAsync();
+}
 
 app.MapDefaultEndpoints();
 

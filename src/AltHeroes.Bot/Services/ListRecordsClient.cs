@@ -71,110 +71,6 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
         return posts;
     }
 
-    /// <summary>
-    /// Pages through all likes on <paramref name="labelerDid"/>'s profile record,
-    /// returning (likerDid, rkey) pairs for enrollment.
-    /// </summary>
-    public async Task<List<(string Did, string Rkey)>> GetProfileLikesAsync(
-        string labelerDid,
-        CancellationToken ct = default)
-    {
-        var results = new List<(string, string)>();
-        string? cursor = null;
-        // We enumerate the labeler's *own* repo listRecords for app.bsky.feed.like
-        // to find who liked the profile. Because likes live in the *liker's* repo,
-        // we must instead enumerate the labeler's likes collection... but actually
-        // likes-on-a-profile are stored in the LIKER's repo.
-        // We use app.bsky.feed.getLikes (AppView aggregation endpoint) instead.
-        while (true)
-        {
-            var profileUri = $"at://{labelerDid}/app.bsky.actor.profile/self";
-            var url = $"https://public.api.bsky.app/xrpc/app.bsky.feed.getLikes" +
-                      $"?uri={Uri.EscapeDataString(profileUri)}&limit=100" +
-                      (cursor is not null ? $"&cursor={Uri.EscapeDataString(cursor)}" : "");
-
-            GetLikesResponse? page;
-            try
-            {
-                page = await Http.GetFromJsonAsync<GetLikesResponse>(url, JsonOpts, ct);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "ListRecordsClient: Failed to fetch likes for labeler {Did}.", labelerDid);
-                break;
-            }
-
-            if (page?.Likes is not { Count: > 0 }) break;
-
-            foreach (var like in page.Likes)
-            {
-                // getLikes returns actor info but not the rkey. We need the rkey to
-                // populate _likeRkeyIndex for unenroll-on-delete. Fetch it per-actor
-                // from their repo. We do this lazily here by listing their likes.
-                var rkey = await GetLikeRkeyAsync(like.Actor.Did, labelerDid, ct);
-                if (rkey is not null)
-                    results.Add((like.Actor.Did, rkey));
-                else
-                    logger.LogDebug("ListRecordsClient: Could not resolve like rkey for {Did}.", like.Actor.Did);
-            }
-
-            if (string.IsNullOrEmpty(page.Cursor)) break;
-            cursor = page.Cursor;
-        }
-
-        return results;
-    }
-
-    /// <summary>
-    /// Finds the rkey of the like record in <paramref name="likerDid"/>'s repo
-    /// that points at the labeler's profile.
-    /// </summary>
-    public async Task<string?> GetLikeRkeyAsync(
-        string likerDid,
-        string labelerDid,
-        CancellationToken ct = default)
-    {
-        var profileUri = $"at://{labelerDid}/app.bsky.actor.profile/self";
-        string? cursor = null;
-
-        string pdsUrl;
-        try { pdsUrl = await ResolvePdsAsync(likerDid, ct); }
-        catch { return null; }
-
-        while (true)
-        {
-            var url = $"{pdsUrl}/xrpc/com.atproto.repo.listRecords" +
-                      $"?repo={Uri.EscapeDataString(likerDid)}" +
-                      $"&collection=app.bsky.feed.like&limit=100" +
-                      (cursor is not null ? $"&cursor={Uri.EscapeDataString(cursor)}" : "");
-
-            ListRecordsResponse? page;
-            try
-            {
-                page = await Http.GetFromJsonAsync<ListRecordsResponse>(url, JsonOpts, ct);
-            }
-            catch
-            {
-                return null;
-            }
-
-            if (page?.Records is not { Count: > 0 }) return null;
-
-            foreach (var rec in page.Records)
-            {
-                if (rec.Value.TryGetProperty("subject", out var subject) &&
-                    subject.TryGetProperty("uri", out var uriEl) &&
-                    uriEl.GetString() == profileUri)
-                {
-                    return rec.Rkey;
-                }
-            }
-
-            if (string.IsNullOrEmpty(page.Cursor)) return null;
-            cursor = page.Cursor;
-        }
-    }
-
     private static PostRecord ParsePost(string atUri, DateTimeOffset createdAt, JsonElement value)
     {
         var images = new List<ImageRecord>();
@@ -245,7 +141,4 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
 
     private record ListRecordsResponse(List<RecordItem>? Records, string? Cursor);
     private record RecordItem(string Rkey, JsonElement Value);
-    private record GetLikesResponse(List<LikeItem>? Likes, string? Cursor);
-    private record LikeItem(ActorItem Actor);
-    private record ActorItem(string Did);
 }

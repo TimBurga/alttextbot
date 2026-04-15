@@ -2,8 +2,10 @@ using System.Security.Cryptography;
 using System.Text;
 using AltHeroes.Bot;
 using AltHeroes.Bot.Configuration;
+using AltHeroes.Bot.Data;
 using AltHeroes.Bot.Services;
 using AltHeroes.Core;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +36,15 @@ builder.Services.AddOptions<AdminOptions>()
 builder.Services.AddOptions<DiscordOptions>()
     .BindConfiguration(DiscordOptions.SectionName);
 
+// ── Database ──────────────────────────────────────────────────────────────────
+builder.Services.AddDbContextFactory<BotDbContext>(options =>
+{
+    var connStr = builder.Configuration.GetConnectionString("BotDb");
+    if (string.IsNullOrWhiteSpace(connStr))
+        throw new InvalidOperationException("ConnectionStrings:BotDb is required.");
+    options.UseNpgsql(connStr);
+});
+
 // ── Singletons ────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<BotState>();
 builder.Services.AddSingleton<BlockedSubscribersStore>();
@@ -62,6 +73,10 @@ builder.Services.AddHostedService<JetstreamWorker>();
 builder.Services.AddHostedService<ShutdownNotifierService>();
 
 var app = builder.Build();
+
+// Ensure the database schema exists on startup.
+await using (var db = app.Services.GetRequiredService<IDbContextFactory<BotDbContext>>().CreateDbContext())
+    await db.Database.EnsureCreatedAsync();
 
 app.MapDefaultEndpoints();
 

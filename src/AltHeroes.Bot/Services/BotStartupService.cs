@@ -9,11 +9,10 @@ namespace AltHeroes.Bot.Services;
 
 /// <summary>
 /// Runs the startup sequence before JetstreamWorker begins consuming events:
-///   1. Load blocked subscribers from disk.
-///   2. Load active subscribers from database → populate BotState.
-///   3. Query current Ozone labels for all subscribers.
-///   4. Parallel backfill (10 concurrent): score each subscriber → diff → apply.
-///   5. Signal JetstreamWorker via StartupGate.
+///   1. Load active subscribers from database → populate BotState.
+///   2. Query current Ozone labels for all subscribers.
+///   3. Parallel backfill (10 concurrent): score each subscriber → diff → apply.
+///   4. Signal JetstreamWorker via StartupGate.
 /// </summary>
 /// <remarks>
 /// Profile likes cannot be backfilled from any Bluesky API (app.bsky.feed.getLikes
@@ -22,7 +21,6 @@ namespace AltHeroes.Bot.Services;
 /// </remarks>
 public sealed class BotStartupService(
     BotState state,
-    BlockedSubscribersStore blocked,
     IDbContextFactory<BotDbContext> dbContextFactory,
     ListRecordsClient listRecords,
     OzoneClient ozone,
@@ -37,10 +35,7 @@ public sealed class BotStartupService(
     {
         logger.LogInformation("BotStartupService: Starting...");
 
-        // 1. Load blocked list
-        await blocked.LoadAsync(ct);
-
-        // 2. Load active subscribers from database
+        // 1. Load active subscribers from database
         logger.LogInformation("BotStartupService: Loading active subscribers from database...");
         await using (var db = dbContextFactory.CreateDbContext())
         {
@@ -54,7 +49,7 @@ public sealed class BotStartupService(
 
         logger.LogInformation("BotStartupService: {Count} subscribers loaded from database.", state.SubscriberCount);
 
-        // 3 + 4. Backfill all subscribers concurrently (10 at a time)
+        // 2 + 3. Backfill all subscribers concurrently (10 at a time)
         var allDids = state.AllSubscriberDids();
         logger.LogInformation("BotStartupService: Starting backfill for {Count} subscribers...", allDids.Count);
 
@@ -64,18 +59,12 @@ public sealed class BotStartupService(
 
         logger.LogInformation("BotStartupService: Backfill complete.");
 
-        // 5. Signal Jetstream to start
+        // 4. Signal Jetstream to start
         startupGate.MarkComplete();
     }
 
     private async Task BackfillOneAsync(string did, SemaphoreSlim sem, CancellationToken ct)
     {
-        if (blocked.IsBlocked(did))
-        {
-            logger.LogDebug("BotStartupService: Skipping blocked subscriber {Did}.", did);
-            return;
-        }
-
         await sem.WaitAsync(ct);
         try
         {

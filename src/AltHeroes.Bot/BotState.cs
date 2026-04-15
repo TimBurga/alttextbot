@@ -25,6 +25,20 @@ public sealed class BotState : IDisposable
         finally { _lock.ExitWriteLock(); }
     }
 
+    /// <summary>Unenrolls a subscriber by DID (used when an admin blocks them).</summary>
+    public void UnenrollByDid(string did)
+    {
+        _lock.EnterWriteLock();
+        try
+        {
+            if (!_subscriberDids.Remove(did)) return;
+            _currentTiers.Remove(did);
+            var rkey = _likeRkeyIndex.FirstOrDefault(kvp => kvp.Value == did).Key;
+            if (rkey is not null) _likeRkeyIndex.Remove(rkey);
+        }
+        finally { _lock.ExitWriteLock(); }
+    }
+
     /// <summary>Returns the DID whose like was deleted, or null if the rkey is unknown.</summary>
     public string? Unenroll(string rkey)
     {

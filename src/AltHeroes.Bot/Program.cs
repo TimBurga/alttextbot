@@ -37,11 +37,13 @@ builder.Services.AddOptions<DiscordOptions>()
     .BindConfiguration(DiscordOptions.SectionName);
 
 // ── Database ──────────────────────────────────────────────────────────────────
-var dataDir = builder.Configuration["DataDir"] ?? "data";
-Directory.CreateDirectory(dataDir);
-var dbPath = Path.Combine(dataDir, "bot.db");
 builder.Services.AddDbContextFactory<BotDbContext>(options =>
-    options.UseSqlite($"Data Source={dbPath}"));
+{
+    var connStr = builder.Configuration.GetConnectionString("BotDb");
+    if (string.IsNullOrWhiteSpace(connStr))
+        throw new InvalidOperationException("ConnectionStrings:BotDb is required.");
+    options.UseNpgsql(connStr);
+});
 
 // ── Singletons ────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<BotState>();
@@ -72,13 +74,9 @@ builder.Services.AddHostedService<ShutdownNotifierService>();
 
 var app = builder.Build();
 
-// Ensure the database schema exists before the bot starts processing events.
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<BotDbContext>>();
-    await using var db = await dbFactory.CreateDbContextAsync();
+// Ensure the database schema exists on startup.
+await using (var db = app.Services.GetRequiredService<IDbContextFactory<BotDbContext>>().CreateDbContext())
     await db.Database.EnsureCreatedAsync();
-}
 
 app.MapDefaultEndpoints();
 

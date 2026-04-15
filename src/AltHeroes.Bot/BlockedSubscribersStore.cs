@@ -1,81 +1,77 @@
-using AltHeroes.Bot.Data;
-using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace AltHeroes.Bot;
 
 /// <summary>
-/// Persists a set of blocked DIDs to a SQLite database so blocks survive restarts.
+/// Persists a set of blocked DIDs to a JSON file so blocks survive restarts.
 /// Blocked subscribers stay enrolled (so unenroll-via-unlike still works)
 /// but are skipped for scoring and labeling.
-/// An in-memory cache is kept for fast hot-path lookups via <see cref="IsBlocked"/>.
 /// </summary>
 public sealed class BlockedSubscribersStore
 {
-    private readonly IDbContextFactory<BotDbContext> _dbFactory;
+    private readonly string _filePath;
+    private readonly SemaphoreSlim _fileLock = new(1, 1);
     private readonly ILogger<BlockedSubscribersStore> _logger;
-    private readonly SemaphoreSlim _cacheLock = new(1, 1);
     private HashSet<string> _blocked = [];
 
-    public BlockedSubscribersStore(IDbContextFactory<BotDbContext> dbFactory, ILogger<BlockedSubscribersStore> logger)
+    public BlockedSubscribersStore(IConfiguration configuration, ILogger<BlockedSubscribersStore> logger)
     {
-        _dbFactory = dbFactory;
         _logger = logger;
+        var dataDir = configuration["DataDir"] ?? "data";
+        _filePath = Path.Combine(dataDir, "blocked.json");
     }
 
-    /// <summary>Loads all currently blocked DIDs from the database into the in-memory cache.</summary>
     public async Task LoadAsync(CancellationToken ct = default)
     {
-        await using var db = await _dbFactory.CreateDbContextAsync(ct);
-        var blocked = await db.Subscribers
-            .Where(s => s.Blocked)
-            .Select(s => s.Did)
-            .ToListAsync(ct);
-        _blocked = [.. blocked];
-        _logger.LogInformation("BlockedSubscribersStore: Loaded {Count} blocked DIDs.", _blocked.Count);
+        if (!File.Exists(_filePath))
+        {
+            _blocked = [];
+            return;
+        }
+
+        try
+        {
+            await using var stream = File.OpenRead(_filePath);
+            var dids = await JsonSerializer.DeserializeAsync<List<string>>(stream, cancellationToken: ct);
+            _blocked = dids is not null ? [.. dids] : [];
+            _logger.LogInformation("BlockedSubscribersStore: Loaded {Count} blocked DIDs.", _blocked.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "BlockedSubscribersStore: Could not load {Path}, starting empty.", _filePath);
+            _blocked = [];
+        }
     }
 
-    /// <summary>Returns true if the given DID is currently blocked (checked via in-memory cache).</summary>
     public bool IsBlocked(string did) => _blocked.Contains(did);
 
     public async Task BlockAsync(string did, CancellationToken ct = default)
     {
-        await using var db = await _dbFactory.CreateDbContextAsync(ct);
-        var now = DateTimeOffset.UtcNow;
-
-        var existing = await db.Subscribers.FindAsync([did], ct);
-        if (existing is null)
-            db.Subscribers.Add(new SubscriberEntity { Did = did, Blocked = true, CreatedAt = now, UpdatedAt = now });
-        else
-        {
-            existing.Blocked = true;
-            existing.UpdatedAt = now;
-        }
-        await db.SaveChangesAsync(ct);
-
-        await _cacheLock.WaitAsync(ct);
-        try { _blocked.Add(did); }
-        finally { _cacheLock.Release(); }
-
+        _blocked.Add(did);
+        await PersistAsync(ct);
         _logger.LogInformation("BlockedSubscribersStore: Blocked {Did}.", did);
     }
 
     public async Task UnblockAsync(string did, CancellationToken ct = default)
     {
-        await using var db = await _dbFactory.CreateDbContextAsync(ct);
-        var existing = await db.Subscribers.FindAsync([did], ct);
-        if (existing is not null)
-        {
-            existing.Blocked = false;
-            existing.UpdatedAt = DateTimeOffset.UtcNow;
-            await db.SaveChangesAsync(ct);
-        }
-
-        await _cacheLock.WaitAsync(ct);
-        try { _blocked.Remove(did); }
-        finally { _cacheLock.Release(); }
-
+        _blocked.Remove(did);
+        await PersistAsync(ct);
         _logger.LogInformation("BlockedSubscribersStore: Unblocked {Did}.", did);
     }
 
     public IReadOnlySet<string> All() => _blocked;
+
+    private async Task PersistAsync(CancellationToken ct)
+    {
+        await _fileLock.WaitAsync(ct);
+        try
+        {
+            var dir = Path.GetDirectoryName(_filePath)!;
+            Directory.CreateDirectory(dir);
+            var tmp = _filePath + ".tmp";
+            await File.WriteAllTextAsync(tmp, JsonSerializer.Serialize(_blocked.ToList()), ct);
+            File.Move(tmp, _filePath, overwrite: true);
+        }
+        finally { _fileLock.Release(); }
+    }
 }

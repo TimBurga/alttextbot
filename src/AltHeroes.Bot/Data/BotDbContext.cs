@@ -11,9 +11,8 @@ public sealed class BotDbContext(DbContextOptions<BotDbContext> options) : DbCon
         modelBuilder.Entity<SubscriberEntity>(e =>
         {
             e.HasKey(s => s.Did);
-            e.Property(s => s.Did).HasMaxLength(512);
-            e.Property(s => s.CreatedAt).IsRequired();
-            e.Property(s => s.UpdatedAt).IsRequired();
+            e.Property(s => s.Did).HasMaxLength(256);
+            e.Property(s => s.RKey).HasMaxLength(128).IsRequired();
         });
     }
 }

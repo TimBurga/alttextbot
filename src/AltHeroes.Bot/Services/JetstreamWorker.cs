@@ -3,9 +3,7 @@ using System.Text;
 using System.Text.Json;
 using AltHeroes.Bot;
 using AltHeroes.Bot.Configuration;
-using AltHeroes.Bot.Data;
 using AltHeroes.Core;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace AltHeroes.Bot.Services;
@@ -22,7 +20,6 @@ public sealed class JetstreamWorker : BackgroundService
 {
     private readonly BotState _state;
     private readonly BlockedSubscribersStore _blocked;
-    private readonly IDbContextFactory<BotDbContext> _dbContextFactory;
     private readonly ListRecordsClient _listRecords;
     private readonly OzoneClient _ozone;
     private readonly LabelDiffService _diff;
@@ -36,7 +33,6 @@ public sealed class JetstreamWorker : BackgroundService
     public JetstreamWorker(
         BotState state,
         BlockedSubscribersStore blocked,
-        IDbContextFactory<BotDbContext> dbContextFactory,
         ListRecordsClient listRecords,
         OzoneClient ozone,
         LabelDiffService diff,
@@ -49,14 +45,13 @@ public sealed class JetstreamWorker : BackgroundService
     {
         _state = state;
         _blocked = blocked;
-        _dbContextFactory = dbContextFactory;
         _listRecords = listRecords;
         _ozone = ozone;
         _diff = diff;
         _startupGate = startupGate;
         _jetstream = jetstreamOptions.Value;
         _scoringConfig = scoringOptions.Value.ToConfig();
-        _profileUri = $"at://{labelerOptions.Value.Did}/app.bsky.actor.profile/self";
+        _profileUri = $"at://{labelerOptions.Value.Did}/app.bsky.labeler.service/self";
         _logger = logger;
     }
 
@@ -194,32 +189,6 @@ public sealed class JetstreamWorker : BackgroundService
         if (string.IsNullOrEmpty(rkey)) return;
 
         _logger.LogInformation("JetstreamWorker: New subscriber like from {Did} (rkey={Rkey}).", did, rkey);
-
-        // Persist the like to the database (upsert: insert on first like, update on re-like).
-        var now = DateTimeOffset.UtcNow;
-        await using (var db = _dbContextFactory.CreateDbContext())
-        {
-            var existing = await db.Subscribers.FindAsync([did], ct);
-            if (existing is null)
-            {
-                db.Subscribers.Add(new SubscriberEntity
-                {
-                    Did = did,
-                    RKey = rkey,
-                    Active = true,
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                });
-            }
-            else
-            {
-                existing.RKey = rkey;
-                existing.Active = true;
-                existing.UpdatedAt = now;
-            }
-            await db.SaveChangesAsync(ct);
-        }
-
         await EnrollLiveAsync(did, rkey, ct);
     }
 
@@ -232,19 +201,6 @@ public sealed class JetstreamWorker : BackgroundService
         if (unenrolledDid is null) return; // not one of our profile likes
 
         _logger.LogInformation("JetstreamWorker: Unlike detected — unenrolling {Did}.", unenrolledDid);
-
-        // Deactivate in database (keep the row so we have audit history).
-        await using (var db = _dbContextFactory.CreateDbContext())
-        {
-            var entity = await db.Subscribers.FindAsync([unenrolledDid], ct);
-            if (entity is not null)
-            {
-                entity.Active = false;
-                entity.UpdatedAt = DateTimeOffset.UtcNow;
-                await db.SaveChangesAsync(ct);
-            }
-        }
-
         var currentTier = _state.GetCurrentTier(unenrolledDid);
         await _ozone.RemoveAllLabelsAsync(unenrolledDid, currentTier, ct);
     }

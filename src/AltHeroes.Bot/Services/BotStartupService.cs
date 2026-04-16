@@ -11,10 +11,9 @@ namespace AltHeroes.Bot.Services;
 /// Runs the startup sequence before JetstreamWorker begins consuming events:
 ///   1. Load blocked subscribers from disk.
 ///   2. Load active subscribers from database → populate BotState.
-///   3. Backfill missing rkeys for legacy subscriber rows that lack one.
-///   4. Query current Ozone labels for all subscribers.
-///   5. Parallel backfill (10 concurrent): score each subscriber → diff → apply.
-///   6. Signal JetstreamWorker via StartupGate.
+///   3. Parallel backfill (10 concurrent): score each subscriber → diff → apply.
+///   4. Signal JetstreamWorker via StartupGate.
+///   5. Resolve missing rkeys for legacy subscriber rows in the background.
 /// </summary>
 public sealed class BotStartupService(
     BotState state,
@@ -48,42 +47,13 @@ public sealed class BotStartupService(
                 .ToListAsync(ct);
         }
 
-        // 3. Backfill rkeys for any legacy rows that don't have one
-        var needsRkey = activeSubscribers.Where(s => string.IsNullOrEmpty(s.RKey)).ToList();
-        if (needsRkey.Count > 0)
-        {
-            logger.LogInformation("BotStartupService: Backfilling rkeys for {Count} legacy subscribers...", needsRkey.Count);
-            await using var db = dbContextFactory.CreateDbContext();
-            var resolved = 0;
-            foreach (var subscriber in needsRkey)
-            {
-                var rkey = await listRecords.GetLikeRkeyAsync(subscriber.Did, _labelerDid, ct);
-                if (rkey is not null)
-                {
-                    subscriber.RKey = rkey;
-                    subscriber.UpdatedAt = DateTimeOffset.UtcNow;
-                    var entry = db.Attach(subscriber);
-                    entry.Property(s => s.RKey).IsModified = true;
-                    entry.Property(s => s.UpdatedAt).IsModified = true;
-                    resolved++;
-                }
-                else
-                {
-                    logger.LogWarning("BotStartupService: Could not resolve rkey for legacy subscriber {Did}.", subscriber.Did);
-                }
-            }
-            if (resolved > 0)
-                await db.SaveChangesAsync(ct);
-            logger.LogInformation("BotStartupService: Backfilled rkeys for {Resolved}/{Total} legacy subscribers.", resolved, needsRkey.Count);
-        }
-
-        // 4. Enroll all active subscribers in memory
+        // 3. Enroll all active subscribers (empty rkeys are safe — BotState skips indexing them)
         foreach (var subscriber in activeSubscribers)
             state.Enroll(subscriber.Did, subscriber.RKey);
 
         logger.LogInformation("BotStartupService: {Count} subscribers loaded from database.", state.SubscriberCount);
 
-        // 5. Backfill all subscribers concurrently (10 at a time)
+        // 4. Backfill scores concurrently (10 at a time)
         var allDids = state.AllSubscriberDids();
         logger.LogInformation("BotStartupService: Starting backfill for {Count} subscribers...", allDids.Count);
 
@@ -93,8 +63,51 @@ public sealed class BotStartupService(
 
         logger.LogInformation("BotStartupService: Backfill complete.");
 
-        // 6. Signal Jetstream to start
+        // 5. Signal Jetstream to start
         startupGate.MarkComplete();
+
+        // 6. Resolve rkeys for legacy subscribers in the background (non-blocking)
+        var legacy = activeSubscribers.Where(s => string.IsNullOrEmpty(s.RKey)).ToList();
+        if (legacy.Count > 0)
+            _ = BackfillRkeysAsync(legacy, ct);
+    }
+
+    private async Task BackfillRkeysAsync(List<SubscriberEntity> legacy, CancellationToken ct)
+    {
+        logger.LogInformation("BotStartupService: Resolving rkeys for {Count} legacy subscribers in background...", legacy.Count);
+        var resolved = 0;
+        try
+        {
+            await using var db = dbContextFactory.CreateDbContext();
+            foreach (var subscriber in legacy)
+            {
+                if (ct.IsCancellationRequested) break;
+                var rkey = await listRecords.GetLikeRkeyAsync(subscriber.Did, _labelerDid, ct);
+                if (rkey is null)
+                {
+                    logger.LogWarning("BotStartupService: Could not resolve rkey for legacy subscriber {Did}.", subscriber.Did);
+                    continue;
+                }
+
+                subscriber.RKey = rkey;
+                subscriber.UpdatedAt = DateTimeOffset.UtcNow;
+                state.Enroll(subscriber.Did, rkey); // adds to rkey index now that we have it
+                var entry = db.Attach(subscriber);
+                entry.Property(s => s.RKey).IsModified = true;
+                entry.Property(s => s.UpdatedAt).IsModified = true;
+                resolved++;
+            }
+
+            if (resolved > 0)
+                await db.SaveChangesAsync(ct);
+        }
+        catch (OperationCanceledException) { /* shutdown during backfill — acceptable */ }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "BotStartupService: Background rkey backfill failed.");
+        }
+
+        logger.LogInformation("BotStartupService: Background rkey backfill complete — {Resolved}/{Total} resolved.", resolved, legacy.Count);
     }
 
     private async Task BackfillOneAsync(string did, SemaphoreSlim sem, CancellationToken ct)

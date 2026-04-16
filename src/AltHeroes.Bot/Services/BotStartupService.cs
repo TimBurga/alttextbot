@@ -1,6 +1,8 @@
 using AltHeroes.Bot;
 using AltHeroes.Bot.Configuration;
+using AltHeroes.Bot.Data;
 using AltHeroes.Core;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace AltHeroes.Bot.Services;
@@ -8,18 +10,16 @@ namespace AltHeroes.Bot.Services;
 /// <summary>
 /// Runs the startup sequence before JetstreamWorker begins consuming events:
 ///   1. Load blocked subscribers from disk.
-///   2. Enumerate all likes on the labeler service record → populate BotState.
-///   3. Query current Ozone labels for all subscribers.
-///   4. Parallel backfill (10 concurrent): score each subscriber → diff → apply.
-///   5. Signal JetstreamWorker via StartupComplete.
-/// </summary>
-/// <summary>
-/// Runs as a BackgroundService so it does not block host startup.
-/// JetstreamWorker waits on StartupGate before processing events.
+///   2. Load active subscribers from database → populate BotState.
+///   3. Backfill missing rkeys for legacy subscriber rows that lack one.
+///   4. Query current Ozone labels for all subscribers.
+///   5. Parallel backfill (10 concurrent): score each subscriber → diff → apply.
+///   6. Signal JetstreamWorker via StartupGate.
 /// </summary>
 public sealed class BotStartupService(
     BotState state,
     BlockedSubscribersStore blocked,
+    IDbContextFactory<BotDbContext> dbContextFactory,
     ListRecordsClient listRecords,
     OzoneClient ozone,
     LabelDiffService diff,
@@ -38,15 +38,52 @@ public sealed class BotStartupService(
         // 1. Load blocked list
         await blocked.LoadAsync(ct);
 
-        // 2. Enumerate all likes on labeler service record
-        logger.LogInformation("BotStartupService: Fetching all subscribers from labeler service likes...");
-        var likerEntries = await listRecords.GetProfileLikesAsync(_labelerDid, ct);
-        foreach (var (did, rkey) in likerEntries)
-            state.Enroll(did, rkey);
+        // 2. Load active subscribers from database
+        logger.LogInformation("BotStartupService: Loading active subscribers from database...");
+        List<SubscriberEntity> activeSubscribers;
+        await using (var db = dbContextFactory.CreateDbContext())
+        {
+            activeSubscribers = await db.Subscribers
+                .Where(s => s.Active)
+                .ToListAsync(ct);
+        }
 
-        logger.LogInformation("BotStartupService: {Count} subscribers enrolled.", state.SubscriberCount);
+        // 3. Backfill rkeys for any legacy rows that don't have one
+        var needsRkey = activeSubscribers.Where(s => string.IsNullOrEmpty(s.RKey)).ToList();
+        if (needsRkey.Count > 0)
+        {
+            logger.LogInformation("BotStartupService: Backfilling rkeys for {Count} legacy subscribers...", needsRkey.Count);
+            await using var db = dbContextFactory.CreateDbContext();
+            var resolved = 0;
+            foreach (var subscriber in needsRkey)
+            {
+                var rkey = await listRecords.GetLikeRkeyAsync(subscriber.Did, _labelerDid, ct);
+                if (rkey is not null)
+                {
+                    subscriber.RKey = rkey;
+                    subscriber.UpdatedAt = DateTimeOffset.UtcNow;
+                    var entry = db.Attach(subscriber);
+                    entry.Property(s => s.RKey).IsModified = true;
+                    entry.Property(s => s.UpdatedAt).IsModified = true;
+                    resolved++;
+                }
+                else
+                {
+                    logger.LogWarning("BotStartupService: Could not resolve rkey for legacy subscriber {Did}.", subscriber.Did);
+                }
+            }
+            if (resolved > 0)
+                await db.SaveChangesAsync(ct);
+            logger.LogInformation("BotStartupService: Backfilled rkeys for {Resolved}/{Total} legacy subscribers.", resolved, needsRkey.Count);
+        }
 
-        // 3 + 4. Backfill all subscribers concurrently (10 at a time)
+        // 4. Enroll all active subscribers in memory
+        foreach (var subscriber in activeSubscribers)
+            state.Enroll(subscriber.Did, subscriber.RKey);
+
+        logger.LogInformation("BotStartupService: {Count} subscribers loaded from database.", state.SubscriberCount);
+
+        // 5. Backfill all subscribers concurrently (10 at a time)
         var allDids = state.AllSubscriberDids();
         logger.LogInformation("BotStartupService: Starting backfill for {Count} subscribers...", allDids.Count);
 
@@ -56,7 +93,7 @@ public sealed class BotStartupService(
 
         logger.LogInformation("BotStartupService: Backfill complete.");
 
-        // 5. Signal Jetstream to start
+        // 6. Signal Jetstream to start
         startupGate.MarkComplete();
     }
 
@@ -71,15 +108,12 @@ public sealed class BotStartupService(
         await sem.WaitAsync(ct);
         try
         {
-            // Query current Ozone label
             var currentTier = await ozone.QueryCurrentTierAsync(did, ct);
             state.SetCurrentTier(did, currentTier);
 
-            // Fetch posts and score
             var posts = await listRecords.GetPostsAsync(did, _scoringConfig.WindowDays, ct);
             var result = ScoringService.ComputeTier(posts, _scoringConfig, DateTimeOffset.UtcNow);
 
-            // Apply if changed (handle = did as fallback; handle resolution not needed at startup)
             await diff.ApplyIfChangedAsync(did, did, result.Tier, ct);
         }
         catch (Exception ex)

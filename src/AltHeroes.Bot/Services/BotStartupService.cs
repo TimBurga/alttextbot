@@ -1,8 +1,6 @@
 using AltHeroes.Bot;
 using AltHeroes.Bot.Configuration;
-using AltHeroes.Bot.Data;
 using AltHeroes.Core;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace AltHeroes.Bot.Services;
@@ -10,27 +8,27 @@ namespace AltHeroes.Bot.Services;
 /// <summary>
 /// Runs the startup sequence before JetstreamWorker begins consuming events:
 ///   1. Load blocked subscribers from disk.
-///   2. Load active subscribers from database → populate BotState.
+///   2. Enumerate all likes on the labeler service record → populate BotState.
 ///   3. Query current Ozone labels for all subscribers.
 ///   4. Parallel backfill (10 concurrent): score each subscriber → diff → apply.
-///   5. Signal JetstreamWorker via StartupGate.
+///   5. Signal JetstreamWorker via StartupComplete.
 /// </summary>
-/// <remarks>
-/// Profile likes cannot be backfilled from any Bluesky API (app.bsky.feed.getLikes
-/// does not support profile URIs). The database is the only source of truth for
-/// previously-discovered subscribers; new subscribers arrive via Jetstream.
-/// </remarks>
+/// <summary>
+/// Runs as a BackgroundService so it does not block host startup.
+/// JetstreamWorker waits on StartupGate before processing events.
+/// </summary>
 public sealed class BotStartupService(
     BotState state,
     BlockedSubscribersStore blocked,
-    IDbContextFactory<BotDbContext> dbContextFactory,
     ListRecordsClient listRecords,
     OzoneClient ozone,
     LabelDiffService diff,
     StartupGate startupGate,
+    IOptions<LabelerOptions> labelerOptions,
     IOptions<ScoringOptions> scoringOptions,
     ILogger<BotStartupService> logger) : BackgroundService
 {
+    private readonly string _labelerDid = labelerOptions.Value.Did;
     private readonly ScoringConfig _scoringConfig = scoringOptions.Value.ToConfig();
 
     protected override async Task ExecuteAsync(CancellationToken ct)
@@ -40,19 +38,13 @@ public sealed class BotStartupService(
         // 1. Load blocked list
         await blocked.LoadAsync(ct);
 
-        // 2. Load active subscribers from database
-        logger.LogInformation("BotStartupService: Loading active subscribers from database...");
-        await using (var db = dbContextFactory.CreateDbContext())
-        {
-            var activeSubscribers = await db.Subscribers
-                .Where(s => s.Active)
-                .ToListAsync(ct);
+        // 2. Enumerate all likes on labeler service record
+        logger.LogInformation("BotStartupService: Fetching all subscribers from labeler service likes...");
+        var likerEntries = await listRecords.GetProfileLikesAsync(_labelerDid, ct);
+        foreach (var (did, rkey) in likerEntries)
+            state.Enroll(did, rkey);
 
-            foreach (var subscriber in activeSubscribers)
-                state.Enroll(subscriber.Did, subscriber.RKey);
-        }
-
-        logger.LogInformation("BotStartupService: {Count} subscribers loaded from database.", state.SubscriberCount);
+        logger.LogInformation("BotStartupService: {Count} subscribers enrolled.", state.SubscriberCount);
 
         // 3 + 4. Backfill all subscribers concurrently (10 at a time)
         var allDids = state.AllSubscriberDids();

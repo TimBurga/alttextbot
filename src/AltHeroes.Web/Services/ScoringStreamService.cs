@@ -33,7 +33,7 @@ public sealed class ScoringStreamService(
         string? pdsUrl = null;
         try
         {
-            pdsUrl = await ResolvePdsAsync(did, http, ct);
+            pdsUrl = await DidResolver.ResolvePdsAsync(did, http, ct);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -216,38 +216,6 @@ public sealed class ScoringStreamService(
         {
             ExtractImages(media, images);
         }
-    }
-
-    /// <summary>
-    /// Resolves a DID to its PDS (Personal Data Server) endpoint by fetching the DID document.
-    /// did:plc → plc.directory; did:web → /.well-known/did.json on the domain.
-    /// </summary>
-    private static async Task<string> ResolvePdsAsync(string did, HttpClient http, CancellationToken ct)
-    {
-        var didDocUrl = did.StartsWith("did:web:")
-            ? $"https://{did["did:web:".Length..]}/.well-known/did.json"
-            : $"https://plc.directory/{Uri.EscapeDataString(did)}";
-
-        var doc = await http.GetFromJsonAsync<JsonElement>(didDocUrl, JsonOpts, ct);
-
-        if (doc.TryGetProperty("service", out var services))
-        {
-            foreach (var svc in services.EnumerateArray())
-            {
-                if (svc.TryGetProperty("id", out var id))
-                {
-                    var idStr = id.GetString() ?? "";
-                    if (idStr == "#atproto_pds" || idStr.EndsWith("#atproto_pds", StringComparison.Ordinal))
-                    {
-                        if (svc.TryGetProperty("serviceEndpoint", out var ep))
-                            return ep.GetString()?.TrimEnd('/')
-                                   ?? throw new InvalidOperationException("Empty PDS endpoint.");
-                    }
-                }
-            }
-        }
-
-        throw new InvalidOperationException($"No #atproto_pds service found in DID document for {did}.");
     }
 
     private static List<PostInfo> BuildPostInfos(List<PostRecord> posts, int minLength, string did) =>

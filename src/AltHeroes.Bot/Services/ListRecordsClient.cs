@@ -72,55 +72,6 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
     }
 
     /// <summary>
-    /// Pages through all likes on <paramref name="labelerDid"/>'s labeler service record,
-    /// returning (likerDid, rkey) pairs for enrollment.
-    /// </summary>
-    public async Task<List<(string Did, string Rkey)>> GetProfileLikesAsync(
-        string labelerDid,
-        CancellationToken ct = default)
-    {
-        var results = new List<(string, string)>();
-        string? cursor = null;
-        while (true)
-        {
-            var labelerUri = $"at://{labelerDid}/app.bsky.labeler.service/self";
-            var url = $"https://public.api.bsky.app/xrpc/app.bsky.feed.getLikes" +
-                      $"?uri={Uri.EscapeDataString(labelerUri)}&limit=100" +
-                      (cursor is not null ? $"&cursor={Uri.EscapeDataString(cursor)}" : "");
-
-            GetLikesResponse? page;
-            try
-            {
-                page = await Http.GetFromJsonAsync<GetLikesResponse>(url, JsonOpts, ct);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "ListRecordsClient: Failed to fetch likes for labeler {Did}.", labelerDid);
-                break;
-            }
-
-            if (page?.Likes is not { Count: > 0 }) break;
-
-            foreach (var like in page.Likes)
-            {
-                // getLikes returns actor info but not the rkey. We need the rkey to
-                // populate _likeRkeyIndex for unenroll-on-delete. Fetch it per-actor
-                // from their repo.
-                var rkey = await GetLikeRkeyAsync(like.Actor.Did, labelerDid, ct);
-                if (rkey is not null)
-                    results.Add((like.Actor.Did, rkey));
-                else
-                    logger.LogDebug("ListRecordsClient: Could not resolve like rkey for {Did}.", like.Actor.Did);
-            }
-
-            if (string.IsNullOrEmpty(page.Cursor)) break;
-            cursor = page.Cursor;
-        }
-
-        return results;
-    }
-
-    /// <summary>
     /// Finds the rkey of the like record in <paramref name="likerDid"/>'s repo
     /// that points at the labeler's service record.
     /// </summary>
@@ -240,7 +191,4 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
 
     private record ListRecordsResponse(List<RecordItem>? Records, string? Cursor);
     private record RecordItem(string Rkey, JsonElement Value);
-    private record GetLikesResponse(List<LikeItem>? Likes, string? Cursor);
-    private record LikeItem(ActorItem Actor);
-    private record ActorItem(string Did);
 }

@@ -85,7 +85,11 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
 
         string pdsUrl;
         try { pdsUrl = await ResolvePdsAsync(likerDid, ct); }
-        catch { return null; }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "ListRecordsClient: Failed to resolve PDS for {Did}.", likerDid);
+            return null;
+        }
 
         while (true)
         {
@@ -99,8 +103,9 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
             {
                 page = await Http.GetFromJsonAsync<ListRecordsResponse>(url, JsonOpts, ct);
             }
-            catch
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                logger.LogWarning(ex, "ListRecordsClient: Failed to fetch likes page for {Did}.", likerDid);
                 return null;
             }
 
@@ -148,43 +153,14 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
 
     // ── PDS resolution ───────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Resolves a DID to its PDS endpoint, with in-memory caching.
-    /// did:plc → plc.directory; did:web → /.well-known/did.json on the domain.
-    /// </summary>
     private async Task<string> ResolvePdsAsync(string did, CancellationToken ct)
     {
         if (_pdsCache.TryGetValue(did, out var cached))
             return cached;
 
-        var didDocUrl = did.StartsWith("did:web:")
-            ? $"https://{did["did:web:".Length..]}/.well-known/did.json"
-            : $"https://plc.directory/{Uri.EscapeDataString(did)}";
-
-        var doc = await Http.GetFromJsonAsync<JsonElement>(didDocUrl, JsonOpts, ct);
-
-        if (doc.TryGetProperty("service", out var services))
-        {
-            foreach (var svc in services.EnumerateArray())
-            {
-                if (svc.TryGetProperty("id", out var id))
-                {
-                    var idStr = id.GetString() ?? "";
-                    if (idStr == "#atproto_pds" || idStr.EndsWith("#atproto_pds", StringComparison.Ordinal))
-                    {
-                        if (svc.TryGetProperty("serviceEndpoint", out var ep))
-                        {
-                            var url = ep.GetString()?.TrimEnd('/')
-                                      ?? throw new InvalidOperationException("Empty PDS endpoint.");
-                            _pdsCache[did] = url;
-                            return url;
-                        }
-                    }
-                }
-            }
-        }
-
-        throw new InvalidOperationException($"No #atproto_pds service found in DID document for {did}.");
+        var url = await DidResolver.ResolvePdsAsync(did, Http, ct);
+        _pdsCache[did] = url;
+        return url;
     }
 
     // ── Response shapes ──────────────────────────────────────────────────────

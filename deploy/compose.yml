@@ -12,8 +12,6 @@ services:
       # Uncomment and configure once the bot is running:
       # BotClient__BaseUrl: http://bot:8080
       # BotClient__AdminApiKey: ${ADMIN_API_KEY}
-    volumes:
-      - web-dataprotection:/root/.aspnet/DataProtection-Keys
     networks:
       - altheroes
 
@@ -52,6 +50,5 @@ networks:
   altheroes:
 
 volumes:
-  web-dataprotection:
   otel-lgtm-data:
 # bot-data:   # uncomment with bot

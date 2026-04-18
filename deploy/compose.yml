@@ -7,6 +7,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       Admin__Password: ${ADMIN_PASSWORD}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4317
+      OTEL_SERVICE_NAME: altheroes-web
       # Uncomment and configure once the bot is running:
       # BotClient__BaseUrl: http://bot:8080
       # BotClient__AdminApiKey: ${ADMIN_API_KEY}
@@ -26,13 +28,74 @@ services:
   #     Labeler__OzoneUrl: ${LABELER_OZONE_URL}
   #     Jetstream__Url: ${JETSTREAM_URL:-wss://jetstream2.us-east.bsky.network/subscribe}
   #     Admin__ApiKey: ${ADMIN_API_KEY}
+  #     OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4317
+  #     OTEL_SERVICE_NAME: altheroes-bot
   #   volumes:
   #     - bot-data:/app/data
   #   networks:
   #     - altheroes
 
+  # ── SigNoz telemetry stack ───────────────────────────────────────────────────
+  signoz-zookeeper:
+    image: bitnami/zookeeper:3.7.2
+    restart: unless-stopped
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    volumes:
+      - signoz-zookeeper:/bitnami/zookeeper
+    networks:
+      - altheroes
+
+  signoz-clickhouse:
+    image: clickhouse/clickhouse-server:24.1.2-alpine
+    restart: unless-stopped
+    depends_on:
+      - signoz-zookeeper
+    volumes:
+      - signoz-clickhouse:/var/lib/clickhouse
+    networks:
+      - altheroes
+
+  signoz-query-service:
+    image: signoz/query-service:0.45.0
+    restart: unless-stopped
+    depends_on:
+      - signoz-clickhouse
+    environment:
+      ClickHouseUrl: tcp://signoz-clickhouse:9000
+      STORAGE: clickhouse
+    volumes:
+      - signoz-data:/var/lib/signoz
+    networks:
+      - altheroes
+
+  signoz-otel-collector:
+    image: signoz/signoz-otel-collector:0.102.7
+    restart: unless-stopped
+    depends_on:
+      - signoz-clickhouse
+    environment:
+      OTEL_RESOURCE_ATTRIBUTES: host.name=vps
+      SIGNOZ_COMPONENT: otel-collector
+      ClickHouseUrl: tcp://signoz-clickhouse:9000
+    networks:
+      - altheroes
+
+  signoz-frontend:
+    image: signoz/frontend:0.45.0
+    restart: unless-stopped
+    depends_on:
+      - signoz-query-service
+    ports:
+      - "127.0.0.1:3301:3301"   # expose on loopback only; proxy or SSH tunnel to access
+    networks:
+      - altheroes
+
 networks:
   altheroes:
 
-# volumes:
-#   bot-data:   # uncomment with bot
+volumes:
+  signoz-zookeeper:
+  signoz-clickhouse:
+  signoz-data:
+# bot-data:   # uncomment with bot

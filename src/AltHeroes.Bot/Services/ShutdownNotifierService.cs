@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using AltHeroes.Bot.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace AltHeroes.Bot.Services;
@@ -11,7 +12,7 @@ namespace AltHeroes.Bot.Services;
 /// distinguishing an unexpected crash from a normal graceful shutdown.
 /// </summary>
 public sealed class ShutdownNotifierService(
-    IEnumerable<IHostedService> hostedServices,
+    IServiceProvider services,
     IHttpClientFactory httpClientFactory,
     IOptions<DiscordOptions> discordOptions,
     ILogger<ShutdownNotifierService> logger) : IHostedService
@@ -28,7 +29,7 @@ public sealed class ShutdownNotifierService(
             return;
         }
 
-        var faulted = hostedServices
+        var faulted = services.GetServices<IHostedService>()
             .OfType<BackgroundService>()
             .Where(s => s.ExecuteTask?.IsFaulted == true)
             .ToList();

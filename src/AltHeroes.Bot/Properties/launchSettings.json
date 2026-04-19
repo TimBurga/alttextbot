@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "AltHeroes.Bot": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:52949;http://localhost:52950"
+    }
+  }
+}

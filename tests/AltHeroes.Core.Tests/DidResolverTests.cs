@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using AltHeroes.Core;
 using FluentAssertions;
+using Xunit;
 
 namespace AltHeroes.Core.Tests;
 

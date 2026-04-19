@@ -1,5 +1,6 @@
 using AltHeroes.Core;
 using FluentAssertions;
+using Xunit;
 
 namespace AltHeroes.Core.Tests;
 

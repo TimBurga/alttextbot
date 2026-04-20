@@ -1,4 +1,3 @@
-using AltHeroes.Bot;
 using AltHeroes.Bot.Configuration;
 using AltHeroes.Bot.Data;
 using AltHeroes.Core;
@@ -9,15 +8,13 @@ namespace AltHeroes.Bot.Services;
 
 /// <summary>
 /// Runs the startup sequence before JetstreamWorker begins consuming events:
-///   1. Load blocked subscribers from disk.
-///   2. Load active subscribers from database → populate BotState.
-///   3. Parallel backfill (10 concurrent): score each subscriber → diff → apply.
-///   4. Signal JetstreamWorker via StartupGate.
-///   5. Resolve missing rkeys for legacy subscriber rows in the background.
+///   1. Load active subscribers from database → populate BotState.
+///   2. Parallel backfill (10 concurrent): score each subscriber → diff → apply.
+///   3. Signal JetstreamWorker via StartupGate.
+///   4. Resolve missing rkeys for legacy subscriber rows in the background.
 /// </summary>
 public sealed class BotStartupService(
     BotState state,
-    BlockedSubscribersStore blocked,
     IDbContextFactory<BotDbContext> dbContextFactory,
     ListRecordsClient listRecords,
     OzoneClient ozone,
@@ -34,10 +31,7 @@ public sealed class BotStartupService(
     {
         logger.LogInformation("BotStartupService: Starting...");
 
-        // 1. Load blocked list
-        await blocked.LoadAsync(ct);
-
-        // 2. Load active subscribers from database
+        // 1. Load active subscribers from database
         logger.LogInformation("BotStartupService: Loading active subscribers from database...");
         List<SubscriberEntity> activeSubscribers;
         await using (var db = dbContextFactory.CreateDbContext())
@@ -47,13 +41,13 @@ public sealed class BotStartupService(
                 .ToListAsync(ct);
         }
 
-        // 3. Enroll all active subscribers (empty rkeys are safe — BotState skips indexing them)
+        // 2. Enroll all active subscribers (empty rkeys are safe — BotState skips indexing them)
         foreach (var subscriber in activeSubscribers)
             state.Enroll(subscriber.Did, subscriber.RKey);
 
         logger.LogInformation("BotStartupService: {Count} subscribers loaded from database.", state.SubscriberCount);
 
-        // 4. Backfill scores concurrently (10 at a time)
+        // 3. Backfill scores concurrently (10 at a time)
         var allDids = state.AllSubscriberDids();
         logger.LogInformation("BotStartupService: Starting backfill for {Count} subscribers...", allDids.Count);
 
@@ -63,10 +57,10 @@ public sealed class BotStartupService(
 
         logger.LogInformation("BotStartupService: Backfill complete.");
 
-        // 5. Signal Jetstream to start
+        // 4. Signal Jetstream to start
         startupGate.MarkComplete();
 
-        // 6. Resolve rkeys for legacy subscribers in the background (non-blocking)
+        // 5. Resolve rkeys for legacy subscribers in the background (non-blocking)
         var legacy = activeSubscribers.Where(s => string.IsNullOrEmpty(s.RKey)).ToList();
         if (legacy.Count > 0)
             _ = BackfillRkeysAsync(legacy, ct);
@@ -112,12 +106,6 @@ public sealed class BotStartupService(
 
     private async Task BackfillOneAsync(string did, SemaphoreSlim sem, CancellationToken ct)
     {
-        if (blocked.IsBlocked(did))
-        {
-            logger.LogDebug("BotStartupService: Skipping blocked subscriber {Did}.", did);
-            return;
-        }
-
         await sem.WaitAsync(ct);
         try
         {

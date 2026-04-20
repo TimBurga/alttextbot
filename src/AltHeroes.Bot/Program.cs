@@ -47,7 +47,6 @@ builder.Services.AddDbContextFactory<BotDbContext>(options =>
 
 // ── Singletons ────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<BotState>();
-builder.Services.AddSingleton<BlockedSubscribersStore>();
 builder.Services.AddSingleton<StartupGate>();
 
 // ── HTTP Clients ──────────────────────────────────────────────────────────────
@@ -84,7 +83,6 @@ app.MapDefaultEndpoints();
 
 app.MapGet("/admin/subscribers", (
     BotState state,
-    BlockedSubscribersStore blocked,
     HttpContext ctx,
     IOptions<AdminOptions> adminOpts) =>
 {
@@ -95,7 +93,6 @@ app.MapGet("/admin/subscribers", (
     {
         Did = did,
         Tier = state.GetCurrentTier(did).ToString(),
-        Blocked = blocked.IsBlocked(did)
     });
     return Results.Ok(new { Count = dids.Count, Items = items });
 });
@@ -103,33 +100,52 @@ app.MapGet("/admin/subscribers", (
 app.MapPost("/admin/block/{did}", async (
     string did,
     BotState state,
-    BlockedSubscribersStore blocked,
+    IDbContextFactory<BotDbContext> dbFactory,
     HttpContext ctx,
     IOptions<AdminOptions> adminOpts,
     CancellationToken ct) =>
 {
     if (!IsAuthorised(ctx, adminOpts.Value.ApiKey)) return Results.Unauthorized();
     if (!state.Contains(did)) return Results.NotFound(new { did, message = "Subscriber not found." });
-    await blocked.BlockAsync(did, ct);
+
+    await using var db = dbFactory.CreateDbContext();
+    var entity = await db.Subscribers.FindAsync([did], ct);
+    if (entity is not null)
+    {
+        entity.Active = false;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(ct);
+    }
+
+    state.UnenrollByDid(did);
     return Results.Ok(new { did, message = "Blocked." });
 });
 
 app.MapDelete("/admin/block/{did}", async (
     string did,
-    BlockedSubscribersStore blocked,
+    BotState state,
+    IDbContextFactory<BotDbContext> dbFactory,
     HttpContext ctx,
     IOptions<AdminOptions> adminOpts,
     CancellationToken ct) =>
 {
     if (!IsAuthorised(ctx, adminOpts.Value.ApiKey)) return Results.Unauthorized();
-    await blocked.UnblockAsync(did, ct);
+
+    await using var db = dbFactory.CreateDbContext();
+    var entity = await db.Subscribers.FindAsync([did], ct);
+    if (entity is null) return Results.NotFound(new { did, message = "Subscriber not found." });
+
+    entity.Active = true;
+    entity.UpdatedAt = DateTimeOffset.UtcNow;
+    await db.SaveChangesAsync(ct);
+
+    state.Enroll(did, entity.RKey);
     return Results.Ok(new { did, message = "Unblocked." });
 });
 
 app.MapPost("/admin/rescore/{did}", async (
     string did,
     BotState state,
-    BlockedSubscribersStore blocked,
     ListRecordsClient listRecords,
     LabelDiffService diff,
     IOptions<ScoringOptions> scoringOpts,
@@ -139,7 +155,6 @@ app.MapPost("/admin/rescore/{did}", async (
 {
     if (!IsAuthorised(ctx, adminOpts.Value.ApiKey)) return Results.Unauthorized();
     if (!state.Contains(did)) return Results.NotFound(new { did, message = "Subscriber not found." });
-    if (blocked.IsBlocked(did)) return Results.BadRequest(new { did, message = "Subscriber is blocked." });
 
     var config = scoringOpts.Value.ToConfig();
     var posts = await listRecords.GetPostsAsync(did, config.WindowDays, ct);

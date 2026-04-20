@@ -41,6 +41,19 @@ public sealed class BotState : IDisposable
         finally { _lock.ExitWriteLock(); }
     }
 
+    public void UnenrollByDid(string did)
+    {
+        _lock.EnterWriteLock();
+        try
+        {
+            _subscriberDids.Remove(did);
+            _currentTiers.Remove(did);
+            var rkeys = _likeRkeyIndex.Where(kv => kv.Value == did).Select(kv => kv.Key).ToList();
+            foreach (var rkey in rkeys) _likeRkeyIndex.Remove(rkey);
+        }
+        finally { _lock.ExitWriteLock(); }
+    }
+
     public bool Contains(string did)
     {
         _lock.EnterReadLock();

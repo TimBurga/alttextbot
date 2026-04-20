@@ -195,6 +195,8 @@ public sealed class JetstreamWorker : BackgroundService
 
         _logger.LogInformation("JetstreamWorker: New subscriber like from {Did} (rkey={Rkey}).", did, rkey);
 
+        var handle = await _listRecords.ResolveHandleAsync(did, ct);
+
         // Persist the like to the database (upsert: insert on first like, update on re-like).
         var now = DateTimeOffset.UtcNow;
         await using (var db = _dbContextFactory.CreateDbContext())
@@ -206,6 +208,7 @@ public sealed class JetstreamWorker : BackgroundService
                 {
                     Did = did,
                     RKey = rkey,
+                    Handle = handle,
                     Active = true,
                     CreatedAt = now,
                     UpdatedAt = now,
@@ -214,6 +217,7 @@ public sealed class JetstreamWorker : BackgroundService
             else
             {
                 existing.RKey = rkey;
+                existing.Handle = handle;
                 existing.Active = true;
                 existing.UpdatedAt = now;
             }

@@ -14,6 +14,7 @@ public sealed class BotDbContext(DbContextOptions<BotDbContext> options) : DbCon
             e.HasKey(s => s.Did);
             e.Property(s => s.Did).HasColumnName("did").HasMaxLength(256);
             e.Property(s => s.RKey).HasColumnName("r_key").HasMaxLength(128).IsRequired();
+            e.Property(s => s.Handle).HasColumnName("handle").HasMaxLength(256);
             e.Property(s => s.Active).HasColumnName("active");
             e.Property(s => s.CreatedAt).HasColumnName("created_at");
             e.Property(s => s.UpdatedAt).HasColumnName("updated_at");

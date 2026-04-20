@@ -7,6 +7,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       Admin__Password: ${ADMIN_PASSWORD}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4317
+      OTEL_SERVICE_NAME: altheroes-web
       # Uncomment and configure once the bot is running:
       # BotClient__BaseUrl: http://bot:8080
       # BotClient__AdminApiKey: ${ADMIN_API_KEY}
@@ -26,13 +28,27 @@ services:
   #     Labeler__OzoneUrl: ${LABELER_OZONE_URL}
   #     Jetstream__Url: ${JETSTREAM_URL:-wss://jetstream2.us-east.bsky.network/subscribe}
   #     Admin__ApiKey: ${ADMIN_API_KEY}
+  #     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4317
+  #     OTEL_SERVICE_NAME: altheroes-bot
   #   volumes:
   #     - bot-data:/app/data
   #   networks:
   #     - altheroes
 
+  # ── Telemetry (single container: Prometheus + Loki + Tempo + Grafana) ────────
+  otel-lgtm:
+    image: grafana/otel-lgtm:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"   # Grafana UI — SSH tunnel or reverse proxy to access
+    volumes:
+      - otel-lgtm-data:/data
+    networks:
+      - altheroes
+
 networks:
   altheroes:
 
-# volumes:
-#   bot-data:   # uncomment with bot
+volumes:
+  otel-lgtm-data:
+# bot-data:   # uncomment with bot

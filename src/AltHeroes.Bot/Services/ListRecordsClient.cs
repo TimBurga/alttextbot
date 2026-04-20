@@ -151,6 +151,16 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
         }
     }
 
+    public async Task<string?> ResolveHandleAsync(string did, CancellationToken ct = default)
+    {
+        try { return await DidResolver.ResolveHandleAsync(did, Http, ct); }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "ListRecordsClient: Failed to resolve handle for {Did}.", did);
+            return null;
+        }
+    }
+
     // ── PDS resolution ───────────────────────────────────────────────────────
 
     private async Task<string> ResolvePdsAsync(string did, CancellationToken ct)

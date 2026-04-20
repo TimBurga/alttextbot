@@ -39,4 +39,29 @@ public static class DidResolver
 
         throw new InvalidOperationException($"No #atproto_pds service found in DID document for {did}.");
     }
+
+    /// <summary>
+    /// Resolves a DID to its handle by reading the alsoKnownAs field of the DID document.
+    /// Returns null if the handle cannot be determined.
+    /// </summary>
+    public static async Task<string?> ResolveHandleAsync(string did, HttpClient http, CancellationToken ct = default)
+    {
+        var didDocUrl = did.StartsWith("did:web:")
+            ? $"https://{did["did:web:".Length..]}/.well-known/did.json"
+            : $"https://plc.directory/{Uri.EscapeDataString(did)}";
+
+        var doc = await http.GetFromJsonAsync<JsonElement>(didDocUrl, JsonOpts, ct);
+
+        if (doc.TryGetProperty("alsoKnownAs", out var aka))
+        {
+            foreach (var entry in aka.EnumerateArray())
+            {
+                var value = entry.GetString();
+                if (value?.StartsWith("at://") == true)
+                    return value["at://".Length..];
+            }
+        }
+
+        return null;
+    }
 }

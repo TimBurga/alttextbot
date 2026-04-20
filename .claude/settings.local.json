@@ -64,7 +64,8 @@
       "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Domain.Tests/ tests/AltTextBot.Application.Tests/ --no-build -v q)",
       "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Application.Tests/ --no-build -v q)",
       "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" build tests/AltTextBot.Application.Tests/ -v q)",
-      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Integration.Tests/ -v q)"
+      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" test tests/AltTextBot.Integration.Tests/ -v q)",
+      "Bash(dotnet test *)"
     ]
   }
 }

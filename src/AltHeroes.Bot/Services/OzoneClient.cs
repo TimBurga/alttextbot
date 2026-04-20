@@ -19,10 +19,12 @@ public sealed class OzoneClient(
     IHttpClientFactory httpClientFactory,
     IOptions<BotOptions> botOptions,
     IOptions<LabelerOptions> labelerOptions,
+    OperationsMetrics metrics,
     ILogger<OzoneClient> logger)
 {
     private readonly BotOptions _bot = botOptions.Value;
     private readonly LabelerOptions _labeler = labelerOptions.Value;
+    private readonly OperationsMetrics _metrics = metrics;
     private HttpClient Http => httpClientFactory.CreateClient(nameof(OzoneClient));
     private readonly SemaphoreSlim _sessionLock = new(1, 1);
     private string? _accessJwt;
@@ -59,7 +61,8 @@ public sealed class OzoneClient(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "OzoneClient: Failed to query labels for {Did}.", did);
+            _metrics.ApiErrors.Add(1);
+            logger.LogWarning(ex, "OzoneClient: Failed to query labels for {Did}", did);
             return LabelTier.None;
         }
 
@@ -110,7 +113,11 @@ public sealed class OzoneClient(
         CancellationToken ct)
     {
         var jwt = await GetAccessJwtAsync(ct);
-        if (jwt is null) { logger.LogWarning("OzoneClient: No session — skipping label update for {Did}.", did); return; }
+        if (jwt is null)
+        {
+            logger.LogWarning("OzoneClient: No session — skipping label update for {Did}", did);
+            return;
+        }
 
         var body = new EmitEventRequest(
             Event: new ModEventLabel(createVals, negateVals),
@@ -133,23 +140,27 @@ public sealed class OzoneClient(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "OzoneClient: Failed to emit label event for {Did}.", did);
+            _metrics.ApiErrors.Add(1);
+            logger.LogWarning(ex, "OzoneClient: Failed to emit label event for {Did}", did);
             return;
         }
 
         if (!resp.IsSuccessStatusCode)
         {
-            // 401 → token expired; clear so next call re-authenticates
+            _metrics.ApiErrors.Add(1);
             if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                logger.LogWarning("OzoneClient: 401 on emitEvent — clearing session.");
+                logger.LogWarning("OzoneClient: 401 on emitEvent — clearing session for {Did}", did);
                 _accessJwt = null;
             }
             var body2 = await resp.Content.ReadAsStringAsync(ct);
-            logger.LogWarning("OzoneClient: emitEvent HTTP {Status} for {Did}: {Body}", resp.StatusCode, did, body2);
+            logger.LogWarning("OzoneClient: emitEvent HTTP {Status} for {Did}: {Body}",
+                resp.StatusCode, did, body2);
         }
         else
         {
+            _metrics.LabelsApplied.Add(createVals.Length);
+            _metrics.LabelsNegated.Add(negateVals.Length);
             logger.LogInformation("OzoneClient: Label updated for {Did}: +[{Create}] -[{Negate}]",
                 did, string.Join(", ", createVals), string.Join(", ", negateVals));
         }
@@ -185,7 +196,8 @@ public sealed class OzoneClient(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "OzoneClient: Failed to create session.");
+            _metrics.ApiErrors.Add(1);
+            logger.LogError(ex, "OzoneClient: Failed to create session for {Did}", _bot.Did);
             return null;
         }
         finally { _sessionLock.Release(); }

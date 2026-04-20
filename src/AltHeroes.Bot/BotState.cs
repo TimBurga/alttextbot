@@ -20,7 +20,7 @@ public sealed class BotState : IDisposable
         try
         {
             _subscriberDids.Add(did);
-            if (!string.IsNullOrEmpty(rkey))
+            if (!string.IsNullOrWhiteSpace(rkey))
                 _likeRkeyIndex[rkey] = did;
         }
         finally { _lock.ExitWriteLock(); }

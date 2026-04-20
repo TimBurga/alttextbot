@@ -21,7 +21,6 @@ namespace AltHeroes.Bot.Services;
 public sealed class JetstreamWorker : BackgroundService
 {
     private readonly BotState _state;
-    private readonly BlockedSubscribersStore _blocked;
     private readonly IDbContextFactory<BotDbContext> _dbContextFactory;
     private readonly ListRecordsClient _listRecords;
     private readonly OzoneClient _ozone;
@@ -35,7 +34,6 @@ public sealed class JetstreamWorker : BackgroundService
 
     public JetstreamWorker(
         BotState state,
-        BlockedSubscribersStore blocked,
         IDbContextFactory<BotDbContext> dbContextFactory,
         ListRecordsClient listRecords,
         OzoneClient ozone,
@@ -48,7 +46,6 @@ public sealed class JetstreamWorker : BackgroundService
         ILogger<JetstreamWorker> logger)
     {
         _state = state;
-        _blocked = blocked;
         _dbContextFactory = dbContextFactory;
         _listRecords = listRecords;
         _ozone = ozone;
@@ -177,7 +174,7 @@ public sealed class JetstreamWorker : BackgroundService
     private async Task HandlePostCreateAsync(string did, CancellationToken ct)
     {
         if (!_state.Contains(did)) return;
-        if (_blocked.IsBlocked(did)) return;
+        if (!await IsSubscriberActiveAsync(did, ct)) return;
 
         _logger.LogDebug("JetstreamWorker: New post from subscriber {Did} — lazy rescoring.", did);
         await LazyRescoreAsync(did, ct);
@@ -281,9 +278,9 @@ public sealed class JetstreamWorker : BackgroundService
 
         _state.Enroll(did, rkey);
 
-        if (_blocked.IsBlocked(did))
+        if (!await IsSubscriberActiveAsync(did, ct))
         {
-            _logger.LogInformation("JetstreamWorker: {Did} is blocked — enrolled but skipping score.", did);
+            _logger.LogInformation("JetstreamWorker: {Did} is not active — enrolled but skipping score.", did);
             return;
         }
 
@@ -298,7 +295,22 @@ public sealed class JetstreamWorker : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "JetstreamWorker: Failed to score newly enrolled {Did}.", did);
+            _logger.LogWarning(ex, "JetstreamWorker: Failed to score newly enrolled {Did}", did);
+        }
+    }
+
+    private async Task<bool> IsSubscriberActiveAsync(string did, CancellationToken ct)
+    {
+        try
+        {
+            await using var db = _dbContextFactory.CreateDbContext();
+            var subscriber = await db.Subscribers.FindAsync(new object[] { did }, cancellationToken: ct);
+            return subscriber?.Active ?? false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "JetstreamWorker: Failed to check active status for {Did}", did);
+            return true; // Default to active on error to avoid blocking subscribers
         }
     }
 }

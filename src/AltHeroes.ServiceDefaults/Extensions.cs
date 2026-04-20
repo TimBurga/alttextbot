@@ -69,6 +69,7 @@ public static class ServiceDefaultsExtensions
         return builder;
     }
 
+
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
         app.MapHealthChecks("/health");

@@ -17,7 +17,6 @@ namespace AltHeroes.Bot.Services;
 /// </summary>
 public sealed class BotStartupService(
     BotState state,
-    BlockedSubscribersStore blocked,
     IDbContextFactory<BotDbContext> dbContextFactory,
     ListRecordsClient listRecords,
     OzoneClient ozone,
@@ -34,13 +33,10 @@ public sealed class BotStartupService(
     {
         logger.LogInformation("BotStartupService: Starting...");
 
-        // 1. Load blocked list
-        await blocked.LoadAsync(ct);
-
-        // 2. Load active subscribers from database
+        // Load active subscribers from database
         logger.LogInformation("BotStartupService: Loading active subscribers from database...");
         List<SubscriberEntity> activeSubscribers;
-        await using (var db = dbContextFactory.CreateDbContext())
+        await using (var db = await dbContextFactory.CreateDbContextAsync(ct))
         {
             activeSubscribers = await db.Subscribers
                 .Where(s => s.Active)
@@ -53,7 +49,7 @@ public sealed class BotStartupService(
 
         logger.LogInformation("BotStartupService: {Count} subscribers loaded from database.", state.SubscriberCount);
 
-        // 4. Backfill scores concurrently (10 at a time)
+        // Backfill scores concurrently (10 at a time)
         var allDids = state.AllSubscriberDids();
         logger.LogInformation("BotStartupService: Starting backfill for {Count} subscribers...", allDids.Count);
 
@@ -63,10 +59,10 @@ public sealed class BotStartupService(
 
         logger.LogInformation("BotStartupService: Backfill complete.");
 
-        // 5. Signal Jetstream to start
+        // Signal Jetstream to start
         startupGate.MarkComplete();
 
-        // 6. Resolve rkeys for legacy subscribers in the background (non-blocking)
+        // Resolve rkeys for legacy subscribers in the background (non-blocking)
         var legacy = activeSubscribers.Where(s => string.IsNullOrEmpty(s.RKey)).ToList();
         if (legacy.Count > 0)
             _ = BackfillRkeysAsync(legacy, ct);
@@ -112,12 +108,6 @@ public sealed class BotStartupService(
 
     private async Task BackfillOneAsync(string did, SemaphoreSlim sem, CancellationToken ct)
     {
-        if (blocked.IsBlocked(did))
-        {
-            logger.LogDebug("BotStartupService: Skipping blocked subscriber {Did}.", did);
-            return;
-        }
-
         await sem.WaitAsync(ct);
         try
         {
@@ -131,7 +121,7 @@ public sealed class BotStartupService(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "BotStartupService: Backfill failed for {Did}.", did);
+            logger.LogWarning(ex, "BotStartupService: Backfill failed for {Did}", did);
         }
         finally { sem.Release(); }
     }

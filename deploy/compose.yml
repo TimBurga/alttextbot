@@ -28,6 +28,7 @@ services:
   #     Labeler__OzoneUrl: ${LABELER_OZONE_URL}
   #     Jetstream__Url: ${JETSTREAM_URL:-wss://jetstream2.us-east.bsky.network/subscribe}
   #     Admin__ApiKey: ${ADMIN_API_KEY}
+  #     ConnectionStrings__BotDb: ${BOT_DB_CONNECTION}
   #     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4317
   #     OTEL_SERVICE_NAME: altheroes-bot
   #   volumes:

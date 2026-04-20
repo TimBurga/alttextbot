@@ -7,12 +7,14 @@ public static class DidResolver
 {
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
 
+    public record DidDocumentInfo(string Pds, string? Handle);
+
     /// <summary>
-    /// Resolves a DID to its PDS endpoint by fetching the DID document.
+    /// Fetches the DID document once and returns both the PDS endpoint and handle.
     /// did:plc → plc.directory; did:web → /.well-known/did.json on the domain.
     /// Throws <see cref="InvalidOperationException"/> if no #atproto_pds service is found.
     /// </summary>
-    public static async Task<string> ResolvePdsAsync(string did, HttpClient http, CancellationToken ct = default)
+    public static async Task<DidDocumentInfo> ResolveAsync(string did, HttpClient http, CancellationToken ct = default)
     {
         var didDocUrl = did.StartsWith("did:web:")
             ? $"https://{did["did:web:".Length..]}/.well-known/did.json"
@@ -20,6 +22,7 @@ public static class DidResolver
 
         var doc = await http.GetFromJsonAsync<JsonElement>(didDocUrl, JsonOpts, ct);
 
+        string? pds = null;
         if (doc.TryGetProperty("service", out var services))
         {
             foreach (var svc in services.EnumerateArray())
@@ -30,38 +33,36 @@ public static class DidResolver
                     if (idStr == "#atproto_pds" || idStr.EndsWith("#atproto_pds", StringComparison.Ordinal))
                     {
                         if (svc.TryGetProperty("serviceEndpoint", out var ep))
-                            return ep.GetString()?.TrimEnd('/')
-                                   ?? throw new InvalidOperationException("Empty PDS endpoint.");
+                            pds = ep.GetString()?.TrimEnd('/');
+                        break;
                     }
                 }
             }
         }
 
-        throw new InvalidOperationException($"No #atproto_pds service found in DID document for {did}.");
-    }
+        if (pds is null)
+            throw new InvalidOperationException($"No #atproto_pds service found in DID document for {did}.");
 
-    /// <summary>
-    /// Resolves a DID to its handle by reading the alsoKnownAs field of the DID document.
-    /// Returns null if the handle cannot be determined.
-    /// </summary>
-    public static async Task<string?> ResolveHandleAsync(string did, HttpClient http, CancellationToken ct = default)
-    {
-        var didDocUrl = did.StartsWith("did:web:")
-            ? $"https://{did["did:web:".Length..]}/.well-known/did.json"
-            : $"https://plc.directory/{Uri.EscapeDataString(did)}";
-
-        var doc = await http.GetFromJsonAsync<JsonElement>(didDocUrl, JsonOpts, ct);
-
+        string? handle = null;
         if (doc.TryGetProperty("alsoKnownAs", out var aka))
         {
             foreach (var entry in aka.EnumerateArray())
             {
                 var value = entry.GetString();
                 if (value?.StartsWith("at://") == true)
-                    return value["at://".Length..];
+                {
+                    handle = value["at://".Length..];
+                    break;
+                }
             }
         }
 
-        return null;
+        return new DidDocumentInfo(pds, handle);
     }
+
+    /// <summary>
+    /// Resolves a DID to its PDS endpoint. Use ResolveAsync when you also need the handle.
+    /// </summary>
+    public static async Task<string> ResolvePdsAsync(string did, HttpClient http, CancellationToken ct = default)
+        => (await ResolveAsync(did, http, ct)).Pds;
 }

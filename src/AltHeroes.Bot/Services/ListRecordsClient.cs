@@ -15,8 +15,9 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
     private HttpClient Http => httpClientFactory.CreateClient(nameof(ListRecordsClient));
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
 
-    // PDS endpoints are stable; cache them to avoid repeated plc.directory lookups.
+    // DID document fields are stable; cache them to avoid repeated plc.directory lookups.
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _pdsCache = new();
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, string?> _handleCache = new();
 
     /// <summary>
     /// Returns all image-bearing and text posts for <paramref name="did"/> within the last
@@ -153,7 +154,14 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
 
     public async Task<string?> ResolveHandleAsync(string did, CancellationToken ct = default)
     {
-        try { return await DidResolver.ResolveHandleAsync(did, Http, ct); }
+        if (_handleCache.TryGetValue(did, out var cached))
+            return cached;
+
+        try
+        {
+            await ResolveAndCacheAsync(did, ct);
+            return _handleCache.GetValueOrDefault(did);
+        }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "ListRecordsClient: Failed to resolve handle for {Did}.", did);
@@ -168,9 +176,15 @@ public sealed class ListRecordsClient(IHttpClientFactory httpClientFactory, ILog
         if (_pdsCache.TryGetValue(did, out var cached))
             return cached;
 
-        var url = await DidResolver.ResolvePdsAsync(did, Http, ct);
-        _pdsCache[did] = url;
-        return url;
+        await ResolveAndCacheAsync(did, ct);
+        return _pdsCache[did];
+    }
+
+    private async Task ResolveAndCacheAsync(string did, CancellationToken ct)
+    {
+        var info = await DidResolver.ResolveAsync(did, Http, ct);
+        _pdsCache[did] = info.Pds;
+        _handleCache[did] = info.Handle;
     }
 
     // ── Response shapes ──────────────────────────────────────────────────────
